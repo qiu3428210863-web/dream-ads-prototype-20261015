@@ -1,6 +1,6 @@
 # Dream Ads — 第一版
 
-当前版本：v1.6.0。作品区恢复连续、平滑、延伸至屏幕边缘的横向滚动；移除造成全页锯齿和彩边的像素位移与通道偏移，保留淡暗角和 CD 悬停。更新说明见 `docs/v1.6-changes.md`；历史标签均保留。
+当前版本：v1.7.0。纵向页面和横向卡片采用 Lenis 轻惯性缓动，共用按需动画时钟；缓存轮播尺寸，减少滚动热路径中的布局读取和界面写入。更新与测量见 `docs/v1.7-changes.md`，历史标签均保留。
 
 基于用户提供的 HTML 活动内容，参考 [OpenArt Arena](https://openart.ai/arena#ranking-panel) 的白/灰/粉视觉、三维物件、分类卡片、细边框面板和工具交互，实现的响应式静态网页。
 
@@ -12,7 +12,7 @@
 npm start
 ```
 
-打开 http://localhost:4173 。仅需要 Node.js，不需要安装 npm 依赖。也可以直接打开 `dist/index.html` 查看页面；表单存储与分享能力以 HTTP 预览为准。
+打开 http://localhost:4173 。仅需要 Node.js，不需要安装 npm 依赖；滚动引擎已随站点本地打包。也可以直接打开 `dist/index.html` 查看页面；表单存储与分享能力以 HTTP 预览为准。
 
 ## 文件
 

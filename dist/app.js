@@ -11,94 +11,72 @@ function renderConcepts() {
  grid.innerHTML = concepts.map((c,index) => `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><div class="work-disc ${c.id}" aria-hidden="true"><div class="disc-art"><img src="assets/${c.art}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button class="work-open" data-preview="${c.id}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${c.id}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`).join('');
 }
 renderConcepts();
-const previousConcept=$('#carousel-prev');
-const nextConcept=$('#carousel-next');
+const previousConcept=$('#carousel-prev'),nextConcept=$('#carousel-next');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
-let carouselTarget=0,carouselFrame=0,lastCarouselTime=0;
-const carouselMax=()=>Math.max(0,grid.scrollWidth-grid.clientWidth);
-const clampCarousel=value=>Math.max(0,Math.min(carouselMax(),value));
-function stopCarousel(){cancelAnimationFrame(carouselFrame);carouselFrame=0;carouselTarget=grid.scrollLeft;lastCarouselTime=0;}
+const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
+let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1;
 function updateCarousel(){
- const cards=$$('.work-card',grid),step=cards[1].offsetLeft-cards[0].offsetLeft;
- const index=Math.min(cards.length-1,Math.round(grid.scrollLeft/step));
- $('.carousel-counter').textContent=String(index+1).padStart(2,'0')+' / '+String(cards.length).padStart(2,'0');
- previousConcept.disabled=grid.scrollLeft<1;
- nextConcept.disabled=carouselMax()-grid.scrollLeft<1;
+ const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
+ if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(carouselCards.length).padStart(2,'0');lastCarouselIndex=index;}
+ const atStart=left<1,atEnd=carouselLimit-left<1;
+ if(previousConcept.disabled!==atStart)previousConcept.disabled=atStart;
+ if(nextConcept.disabled!==atEnd)nextConcept.disabled=atEnd;
 }
-function glideCarousel(time){
- const elapsed=lastCarouselTime?Math.min(40,time-lastCarouselTime):16.67;lastCarouselTime=time;
- const difference=carouselTarget-grid.scrollLeft;
- if(Math.abs(difference)<1){grid.scrollLeft=carouselTarget;carouselFrame=0;lastCarouselTime=0;updateCarousel();return;}
- const before=grid.scrollLeft;
- grid.scrollLeft+=difference*(1-Math.exp(-elapsed/65));
- // Browser scroll positions are quantized to device pixels; finish the last pixel.
- if(Math.abs(grid.scrollLeft-before)<.01){grid.scrollLeft=carouselTarget;carouselFrame=0;lastCarouselTime=0;updateCarousel();return;}
- carouselFrame=requestAnimationFrame(glideCarousel);
-}
-function scrollCarouselTo(value){
- carouselTarget=clampCarousel(value);
- if(reducedCarouselMotion.matches){grid.scrollLeft=carouselTarget;updateCarousel();return;}
- if(!carouselFrame)carouselFrame=requestAnimationFrame(glideCarousel);
-}
-function moveCarousel(direction){
- const cards=$$('.work-card',grid),step=cards[1].offsetLeft-cards[0].offsetLeft;
- scrollCarouselTo((carouselFrame?carouselTarget:grid.scrollLeft)+direction*step);
-}
-previousConcept.addEventListener('click',()=>moveCarousel(-1));
-nextConcept.addEventListener('click',()=>moveCarousel(1));
-grid.addEventListener('scroll',updateCarousel,{passive:true});
-grid.addEventListener('wheel',event=>{
- if(event.ctrlKey)return;
- // Horizontal trackpad gestures keep native platform momentum.
- if(Math.abs(event.deltaX)>Math.abs(event.deltaY)){stopCarousel();return;}
- const unit=event.deltaMode===1?16:event.deltaMode===2?grid.clientWidth:1;
- const base=carouselFrame?carouselTarget:grid.scrollLeft;
- const next=clampCarousel(base+event.deltaY*unit);
- if(Math.abs(next-base)<.1){if(carouselFrame)event.preventDefault();return;}
- event.preventDefault();scrollCarouselTo(next);
-},{passive:false});
+function measureCarousel(){carouselStep=carouselCards[1].offsetLeft-carouselCards[0].offsetLeft;carouselLimit=Math.max(0,grid.scrollWidth-grid.clientWidth);updateCarousel();}
+// The same engine and damping model as shader.se; one clock drives both axes.
+const pageScroll=new Lenis({autoRaf:false,lerp:.1,smoothWheel:true,syncTouch:false,anchors:{onStart:resumeScrollClock},stopInertiaOnNavigate:true,prevent:element=>element.tagName==='DIALOG'||element.tagName==='TEXTAREA'||element.isContentEditable});
+const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'both',lerp:.1,smoothWheel:true,syncTouch:false,overscroll:true});
+let scrollFrame=0;
+function tickScroll(time){pageScroll.raf(time);railScroll.raf(time);scrollFrame=pageScroll.isScrolling==='smooth'||railScroll.isScrolling==='smooth'?requestAnimationFrame(tickScroll):0;}
+function resumeScrollClock(){if(!scrollFrame){pageScroll.time=railScroll.time=0;scrollFrame=requestAnimationFrame(tickScroll);}}
+addEventListener('wheel',resumeScrollClock,{passive:true});
+addEventListener('keydown',event=>{if(!event.defaultPrevented&&['PageUp','PageDown','Home','End','ArrowUp','ArrowDown',' '].includes(event.key)&&!event.target.closest('input,textarea,select,button,[contenteditable]'))pageScroll.scrollTo(scrollY,{immediate:true});});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(scrollFrame);scrollFrame=0;}else resumeScrollClock();});
+function scrollCarouselTo(value,immediate=false){railScroll.scrollTo(Math.max(0,Math.min(carouselLimit,value)),{immediate:immediate||reducedCarouselMotion.matches});resumeScrollClock();}
+function moveCarousel(direction){scrollCarouselTo(railScroll.targetScroll+direction*carouselStep);}
+previousConcept.addEventListener('click',()=>moveCarousel(-1));nextConcept.addEventListener('click',()=>moveCarousel(1));
+railScroll.on('scroll',updateCarousel);
 grid.addEventListener('keydown',event=>{
  if(event.key==='ArrowRight'){event.preventDefault();moveCarousel(1);}
  else if(event.key==='ArrowLeft'){event.preventDefault();moveCarousel(-1);}
  else if(event.key==='Home'){event.preventDefault();scrollCarouselTo(0);}
- else if(event.key==='End'){event.preventDefault();scrollCarouselTo(carouselMax());}
+ else if(event.key==='End'){event.preventDefault();scrollCarouselTo(carouselLimit);}
 });
-// Every sleeve remains mounted. Mouse dragging follows the pointer; touch is native.
+// Keep a float target in Lenis rather than reading rounded DOM scrollLeft back.
 let drag=null,suppressClickUntil=0;
 grid.addEventListener('pointerdown',event=>{
- stopCarousel();
  if(event.pointerType!=='mouse'||event.button!==0)return;
- drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:grid.scrollLeft,active:false};
+ railScroll.scrollTo(grid.scrollLeft,{immediate:true});
+ drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:grid.scrollLeft,lastX:event.clientX,lastTime:event.timeStamp,velocity:0,active:false};
 });
 grid.addEventListener('pointermove',event=>{
  if(!drag||event.pointerId!==drag.id)return;
  const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
- if(!drag.active){
-  if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){drag=null;return;}
-  if(Math.abs(dx)<7)return;
-  drag.active=true;grid.classList.add('is-dragging');grid.setPointerCapture(event.pointerId);
- }
- event.preventDefault();grid.scrollLeft=drag.left-dx;
+ if(!drag.active){if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){drag=null;return;}if(Math.abs(dx)<7)return;drag.active=true;grid.classList.add('is-dragging');grid.setPointerCapture(event.pointerId);}
+ const elapsed=event.timeStamp-drag.lastTime;
+ if(elapsed>0)drag.velocity=(drag.lastX-event.clientX)/elapsed;
+ drag.lastX=event.clientX;drag.lastTime=event.timeStamp;
+ event.preventDefault();scrollCarouselTo(drag.left-dx,true);
 });
 function finishCarouselDrag(event){
  if(!drag||event.pointerId!==drag.id)return;
  const gesture=drag;drag=null;grid.classList.remove('is-dragging');
- if(gesture.active){suppressClickUntil=performance.now()+250;if(grid.hasPointerCapture(gesture.id))grid.releasePointerCapture(gesture.id);}
- carouselTarget=grid.scrollLeft;updateCarousel();
+ if(gesture.active){
+  suppressClickUntil=performance.now()+250;
+  if(grid.hasPointerCapture(gesture.id))grid.releasePointerCapture(gesture.id);
+  if(event.type==='pointerup'&&event.timeStamp-gesture.lastTime<90&&!reducedCarouselMotion.matches)scrollCarouselTo(grid.scrollLeft+Math.max(-110,Math.min(110,gesture.velocity*90)));
+ }
 }
-grid.addEventListener('pointerup',finishCarouselDrag);
-grid.addEventListener('pointercancel',finishCarouselDrag);
+grid.addEventListener('pointerup',finishCarouselDrag);grid.addEventListener('pointercancel',finishCarouselDrag);
 grid.addEventListener('lostpointercapture',()=>{drag=null;grid.classList.remove('is-dragging');});
 grid.addEventListener('click',event=>{if(performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
 grid.addEventListener('focusin',event=>{
  const card=event.target.closest('.work-card');if(!card||!event.target.matches(':focus-visible'))return;
- const cardRect=card.getBoundingClientRect(),viewport=grid.getBoundingClientRect();
- const gutter=parseFloat(getComputedStyle(grid).paddingLeft);
+ const cardRect=card.getBoundingClientRect(),viewport=grid.getBoundingClientRect(),gutter=parseFloat(getComputedStyle(grid).paddingLeft);
  if(cardRect.left<viewport.left+gutter||cardRect.right>viewport.right-gutter)scrollCarouselTo(grid.scrollLeft+cardRect.left-viewport.left-gutter);
 });
-new ResizeObserver(()=>{stopCarousel();updateCarousel();}).observe(grid);
-reducedCarouselMotion.addEventListener('change',()=>{stopCarousel();updateCarousel();});
-updateCarousel();
+new ResizeObserver(measureCarousel).observe(grid);measureCarousel();
+new MutationObserver(()=>{const blocked=document.body.classList.contains('modal-open');if(blocked){pageScroll.stop();railScroll.stop();}else{pageScroll.start();railScroll.start();}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const menuButton = $('.menu-toggle');
 const mobileNav = $('#mobile-nav');
 function closeMenu(){menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Open menu');mobileNav.hidden=true;}
