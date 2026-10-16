@@ -11,78 +11,93 @@ function renderConcepts() {
  grid.innerHTML = concepts.map((c,index) => `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><div class="work-disc ${c.id}" aria-hidden="true"><div class="disc-art"><img src="assets/${c.art}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button class="work-open" data-preview="${c.id}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${c.id}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`).join('');
 }
 renderConcepts();
-const previousConcept = $('#carousel-prev');
-const nextConcept = $('#carousel-next');
-const reducedCarouselMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const compactCarousel = matchMedia('(max-width: 700px)');
-let carouselIndex = 0, wheelLockedUntil = 0;
-function visibleConceptCount(){return compactCarousel.matches ? 1 : 2;}
-function updateCarousel(direction=0){
- const count=visibleConceptCount();
- carouselIndex=Math.max(0,Math.min(concepts.length-count,carouselIndex));
- $$('.work-card',grid).forEach((card,index)=>{
-  const visible=index>=carouselIndex&&index<carouselIndex+count;
-  card.hidden=!visible;
-  if(visible&&direction&&!reducedCarouselMotion.matches){
-   card.getAnimations().forEach(animation=>animation.cancel());
-   card.animate([{opacity:0,transform:'translateX('+direction*14+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
-  }
- });
- $('.carousel-counter').textContent=String(carouselIndex+1).padStart(2,'0')+' / '+String(concepts.length).padStart(2,'0');
- previousConcept.disabled=carouselIndex===0;
- nextConcept.disabled=carouselIndex>=concepts.length-count;
+const previousConcept=$('#carousel-prev');
+const nextConcept=$('#carousel-next');
+const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let carouselTarget=0,carouselFrame=0,lastCarouselTime=0;
+const carouselMax=()=>Math.max(0,grid.scrollWidth-grid.clientWidth);
+const clampCarousel=value=>Math.max(0,Math.min(carouselMax(),value));
+function stopCarousel(){cancelAnimationFrame(carouselFrame);carouselFrame=0;carouselTarget=grid.scrollLeft;lastCarouselTime=0;}
+function updateCarousel(){
+ const cards=$$('.work-card',grid),step=cards[1].offsetLeft-cards[0].offsetLeft;
+ const index=Math.min(cards.length-1,Math.round(grid.scrollLeft/step));
+ $('.carousel-counter').textContent=String(index+1).padStart(2,'0')+' / '+String(cards.length).padStart(2,'0');
+ previousConcept.disabled=grid.scrollLeft<1;
+ nextConcept.disabled=carouselMax()-grid.scrollLeft<1;
 }
-function scrollToConcept(index){const old=carouselIndex;carouselIndex=index;updateCarousel(Math.sign(index-old));}
-function moveCarousel(direction){scrollToConcept(carouselIndex+direction);}
+function glideCarousel(time){
+ const elapsed=lastCarouselTime?Math.min(40,time-lastCarouselTime):16.67;lastCarouselTime=time;
+ const difference=carouselTarget-grid.scrollLeft;
+ if(Math.abs(difference)<1){grid.scrollLeft=carouselTarget;carouselFrame=0;lastCarouselTime=0;updateCarousel();return;}
+ const before=grid.scrollLeft;
+ grid.scrollLeft+=difference*(1-Math.exp(-elapsed/65));
+ // Browser scroll positions are quantized to device pixels; finish the last pixel.
+ if(Math.abs(grid.scrollLeft-before)<.01){grid.scrollLeft=carouselTarget;carouselFrame=0;lastCarouselTime=0;updateCarousel();return;}
+ carouselFrame=requestAnimationFrame(glideCarousel);
+}
+function scrollCarouselTo(value){
+ carouselTarget=clampCarousel(value);
+ if(reducedCarouselMotion.matches){grid.scrollLeft=carouselTarget;updateCarousel();return;}
+ if(!carouselFrame)carouselFrame=requestAnimationFrame(glideCarousel);
+}
+function moveCarousel(direction){
+ const cards=$$('.work-card',grid),step=cards[1].offsetLeft-cards[0].offsetLeft;
+ scrollCarouselTo((carouselFrame?carouselTarget:grid.scrollLeft)+direction*step);
+}
 previousConcept.addEventListener('click',()=>moveCarousel(-1));
 nextConcept.addEventListener('click',()=>moveCarousel(1));
+grid.addEventListener('scroll',updateCarousel,{passive:true});
 grid.addEventListener('wheel',event=>{
  if(event.ctrlKey)return;
- const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
- if(!delta)return;
- const now=performance.now();
- if(now<wheelLockedUntil){event.preventDefault();return;}
- const direction=Math.sign(delta), next=carouselIndex+direction;
- if(next<0||next>concepts.length-visibleConceptCount())return;
- event.preventDefault();wheelLockedUntil=now+500;moveCarousel(direction);
+ // Horizontal trackpad gestures keep native platform momentum.
+ if(Math.abs(event.deltaX)>Math.abs(event.deltaY)){stopCarousel();return;}
+ const unit=event.deltaMode===1?16:event.deltaMode===2?grid.clientWidth:1;
+ const base=carouselFrame?carouselTarget:grid.scrollLeft;
+ const next=clampCarousel(base+event.deltaY*unit);
+ if(Math.abs(next-base)<.1){if(carouselFrame)event.preventDefault();return;}
+ event.preventDefault();scrollCarouselTo(next);
 },{passive:false});
 grid.addEventListener('keydown',event=>{
  if(event.key==='ArrowRight'){event.preventDefault();moveCarousel(1);}
  else if(event.key==='ArrowLeft'){event.preventDefault();moveCarousel(-1);}
- else if(event.key==='Home'){event.preventDefault();scrollToConcept(0);}
- else if(event.key==='End'){event.preventDefault();scrollToConcept(concepts.length-visibleConceptCount());}
+ else if(event.key==='Home'){event.preventDefault();scrollCarouselTo(0);}
+ else if(event.key==='End'){event.preventDefault();scrollCarouselTo(carouselMax());}
 });
-// Discrete full-card pages prevent cropped sleeves at every resting position.
-// Vertical touch gestures continue to scroll the document.
+// Every sleeve remains mounted. Mouse dragging follows the pointer; touch is native.
 let drag=null,suppressClickUntil=0;
 grid.addEventListener('pointerdown',event=>{
- if(event.pointerType==='mouse'&&event.button!==0)return;
- drag={id:event.pointerId,x:event.clientX,y:event.clientY,active:false};
+ stopCarousel();
+ if(event.pointerType!=='mouse'||event.button!==0)return;
+ drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:grid.scrollLeft,active:false};
 });
 grid.addEventListener('pointermove',event=>{
  if(!drag||event.pointerId!==drag.id)return;
  const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
  if(!drag.active){
   if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){drag=null;return;}
-  if(Math.abs(dx)<10)return;
+  if(Math.abs(dx)<7)return;
   drag.active=true;grid.classList.add('is-dragging');grid.setPointerCapture(event.pointerId);
  }
- event.preventDefault();
+ event.preventDefault();grid.scrollLeft=drag.left-dx;
 });
 function finishCarouselDrag(event){
  if(!drag||event.pointerId!==drag.id)return;
  const gesture=drag;drag=null;grid.classList.remove('is-dragging');
- if(gesture.active){
-  suppressClickUntil=performance.now()+300;
-  if(grid.hasPointerCapture(gesture.id))grid.releasePointerCapture(gesture.id);
-  const dx=event.clientX-gesture.x;if(Math.abs(dx)>30)moveCarousel(dx<0?1:-1);
- }
+ if(gesture.active){suppressClickUntil=performance.now()+250;if(grid.hasPointerCapture(gesture.id))grid.releasePointerCapture(gesture.id);}
+ carouselTarget=grid.scrollLeft;updateCarousel();
 }
 grid.addEventListener('pointerup',finishCarouselDrag);
-grid.addEventListener('pointercancel',()=>{drag=null;grid.classList.remove('is-dragging');});
+grid.addEventListener('pointercancel',finishCarouselDrag);
 grid.addEventListener('lostpointercapture',()=>{drag=null;grid.classList.remove('is-dragging');});
 grid.addEventListener('click',event=>{if(performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
-compactCarousel.addEventListener('change',()=>updateCarousel());
+grid.addEventListener('focusin',event=>{
+ const card=event.target.closest('.work-card');if(!card||!event.target.matches(':focus-visible'))return;
+ const cardRect=card.getBoundingClientRect(),viewport=grid.getBoundingClientRect();
+ const gutter=parseFloat(getComputedStyle(grid).paddingLeft);
+ if(cardRect.left<viewport.left+gutter||cardRect.right>viewport.right-gutter)scrollCarouselTo(grid.scrollLeft+cardRect.left-viewport.left-gutter);
+});
+new ResizeObserver(()=>{stopCarousel();updateCarousel();}).observe(grid);
+reducedCarouselMotion.addEventListener('change',()=>{stopCarousel();updateCarousel();});
 updateCarousel();
 const menuButton = $('.menu-toggle');
 const mobileNav = $('#mobile-nav');
