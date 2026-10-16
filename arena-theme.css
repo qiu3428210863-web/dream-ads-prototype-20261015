@@ -44,6 +44,14 @@ p{color:var(--arena-muted)}
 
 /* A continuous, full-bleed rail extends to the screen edges. */
 html{overflow-x:clip}
+/* Lenis is the sole wheel interpolator; CSS smooth would apply a second ease. */
+html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.showcase-grid.lenis{scroll-behavior:auto!important}
+.work-cover,.work-disc{will-change:transform}
+.showcase-grid .work-card:hover .work-product{transform:rotate(6deg)}
+.crt-glass{transform:translateZ(0)}
 .crt-surface{filter:none}
 .showcase-carousel{--rail-gutter:max(32px,calc((var(--viewport-width,100vw) - 1440px)/2));width:var(--viewport-width,100vw);margin-inline-start:calc((100% - var(--viewport-width,100vw))/2)}
 .showcase-grid{overflow-x:auto;overflow-y:hidden;gap:24px;padding:116px var(--rail-gutter) 14px;touch-action:pan-x pan-y;scroll-snap-type:none;scroll-behavior:auto;scroll-padding-inline:var(--rail-gutter)}
@@ -54,7 +62,7 @@ html{overflow-x:clip}
 .showcase-grid .work-visual{background:var(--arena-card)}
 .work-cover,.lifestyle .work-cover,.tech .work-cover{background:radial-gradient(ellipse at 65% 55%,#fff 0%,#f3f5f4 55%,#e2e2e2 100%)}
 .work-cover::after{background:linear-gradient(0deg,#00000008,transparent 70%)}
-.showcase-grid .work-product{opacity:.9;filter:grayscale(1) drop-shadow(0 15px 16px #0002)}
+.showcase-grid .work-product{opacity:.9;filter:grayscale(1);will-change:transform}
 .showcase-grid .cover-wordmark{filter:none}
 .showcase-grid .work-visual .work-caption{color:var(--arena-ink);background:none;-webkit-text-fill-color:currentColor;filter:drop-shadow(1px 3px 0 #ffffffa6);text-shadow:none}
 .showcase-grid .work-meta h3{color:var(--arena-ink)}
