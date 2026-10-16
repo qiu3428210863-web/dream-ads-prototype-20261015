@@ -7,16 +7,68 @@ const concepts = [
  {id:'tech',category:'Tech & innovation',title:'Tune into another world.',product:'FORM · Wireless audio',art:'headphones.svg',headline:'Feel\neverything.',description:'Silver headphones drift through a quiet, sculptural soundscape. The product becomes a portal to a world of your own.',scenes:['Turn down the noise.','Turn up your world.','Feel everything.']}
 ];
 const grid = $('#showcase-grid');
-function renderConcepts(filter = 'all') {
- grid.innerHTML = concepts.filter(c => filter === 'all' || c.id === filter).map(c => `<article class="work-card"><button class="work-visual ${c.id}" data-preview="${c.id}" aria-label="Preview ${c.title}"><span class="work-caption">${c.headline.replace('\n','<br>')}</span><img src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680"><span class="work-length">00:15</span><span class="work-play"><span aria-hidden="true">▶</span> Play concept</span></button><div class="work-meta"><div><h3>${c.title}</h3><p>${c.product}</p></div><span aria-hidden="true">↗</span></div></article>`).join('');
+function renderConcepts() {
+ grid.innerHTML = concepts.map((c,index) => `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><button class="work-open" data-preview="${c.id}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${c.id}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`).join('');
 }
 renderConcepts();
-const categoryButtons = $$('.category');
-function selectCategory(button) {
- categoryButtons.forEach(b => {const selected = b === button;b.classList.toggle('active',selected);b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;});
- grid.setAttribute('aria-labelledby',button.id); renderConcepts(button.dataset.filter);
+const previousConcept = $('#carousel-prev');
+const nextConcept = $('#carousel-next');
+const reducedCarouselMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let carouselIndex = 0;
+function scrollToConcept(index) {
+ const cards = $$('.work-card', grid);
+ const bounded = Math.max(0, Math.min(cards.length - 1, index));
+ const left = cards[bounded].offsetLeft - cards[0].offsetLeft;
+ grid.scrollTo({left, behavior:reducedCarouselMotion.matches?'instant':'smooth'});
 }
-categoryButtons.forEach((button,index) => {button.addEventListener('click',()=>selectCategory(button));button.addEventListener('keydown',event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%categoryButtons.length;else if(event.key==='ArrowLeft')next=(index+categoryButtons.length-1)%categoryButtons.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=categoryButtons.length-1;else return;event.preventDefault();categoryButtons[next].focus();selectCategory(categoryButtons[next]);categoryButtons[next].scrollIntoView({block:'nearest',inline:'nearest'});});});
+function updateCarousel() {
+ const cards = $$('.work-card', grid);
+ const step = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : grid.clientWidth;
+ const max = grid.scrollWidth - grid.clientWidth;
+ carouselIndex = max-grid.scrollLeft < 3 ? cards.length-1 : Math.min(cards.length-1,Math.round(grid.scrollLeft/step));
+ $('.carousel-counter').textContent = `${String(carouselIndex+1).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
+ previousConcept.disabled = grid.scrollLeft < 3;
+ nextConcept.disabled = max-grid.scrollLeft < 3;
+}
+function moveCarousel(direction) { const cards=$$('.work-card',grid); const step=cards.length>1?cards[1].offsetLeft-cards[0].offsetLeft:grid.clientWidth; grid.scrollBy({left:direction*step,behavior:reducedCarouselMotion.matches?'instant':'smooth'}); }
+previousConcept.addEventListener('click',()=>moveCarousel(-1));
+nextConcept.addEventListener('click',()=>moveCarousel(1));
+grid.addEventListener('scroll',updateCarousel,{passive:true});
+grid.addEventListener('keydown',event=>{
+ if(event.key==='ArrowRight'){event.preventDefault();moveCarousel(1);}
+ else if(event.key==='ArrowLeft'){event.preventDefault();moveCarousel(-1);}
+ else if(event.key==='Home'){event.preventDefault();scrollToConcept(0);}
+ else if(event.key==='End'){event.preventDefault();scrollToConcept(concepts.length-1);}
+});
+// Trackpads and touch keep native scrolling. Mouse dragging starts only after
+// a horizontal threshold, so a normal click still opens the concept preview.
+let drag=null, suppressClickUntil=0;
+grid.addEventListener('pointerdown',event=>{
+ if(event.pointerType!=='mouse'||event.button!==0)return;
+ drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:grid.scrollLeft,active:false};
+});
+grid.addEventListener('pointermove',event=>{
+ if(!drag||event.pointerId!==drag.id)return;
+ const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+ if(!drag.active){
+  if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){drag=null;return;}
+  if(Math.abs(dx)<7)return;
+  drag.active=true;grid.classList.add('is-dragging');grid.setPointerCapture(event.pointerId);
+ }
+ event.preventDefault();grid.scrollLeft=drag.left-dx;
+});
+function finishCarouselDrag(event){
+ if(!drag||event.pointerId!==drag.id)return;
+ if(drag.active){suppressClickUntil=performance.now()+250;if(grid.hasPointerCapture(drag.id))grid.releasePointerCapture(drag.id);}
+ drag=null;grid.classList.remove('is-dragging');updateCarousel();
+}
+grid.addEventListener('pointerup',finishCarouselDrag);
+grid.addEventListener('pointercancel',finishCarouselDrag);
+grid.addEventListener('lostpointercapture',()=>{drag=null;grid.classList.remove('is-dragging');});
+grid.addEventListener('click',event=>{if(performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
+grid.addEventListener('focusin',event=>{const card=event.target.closest('.work-card');if(card&&event.target.matches(':focus-visible'))scrollToConcept($$('.work-card',grid).indexOf(card));});
+new ResizeObserver(updateCarousel).observe(grid);
+updateCarousel();
 const menuButton = $('.menu-toggle');
 const mobileNav = $('#mobile-nav');
 function closeMenu(){menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Open menu');mobileNav.hidden=true;}

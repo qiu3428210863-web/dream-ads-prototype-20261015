@@ -1,6 +1,6 @@
 # Dream Ads — 第一版
 
-当前版本：v1.2.0。新增基于 Shader 官网镜头公式的曲面效果，固定暗角，滚动不改变暗度。技术分析见 `docs/crt-analysis-v1.2.md`；v1.0.0 / v1.1.0 标签均保留。
+当前版本：v1.3.0。作品区改为单行横向卡片，移除分类条；导航独立于曲面效果，暗角减淡并集中于外沿。更新说明见 `docs/v1.3-changes.md`。曲面技术分析见 `docs/crt-analysis-v1.2.md`；历史标签均保留。
 
 基于用户提供的 HTML 活动内容，参考 [OpenArt Arena](https://openart.ai/arena#ranking-panel) 的白/灰/粉视觉、三维物件、分类卡片、细边框面板和工具交互，实现的响应式静态网页。
 

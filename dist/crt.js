@@ -10,9 +10,9 @@
   const surface = document.createElement('div');
   surface.className = 'crt-surface';
   surface.id = 'crt-surface';
-  const header = document.querySelector('.header');
-  header.before(surface);
-  [header, document.querySelector('main'), document.querySelector('.footer')].forEach(node => surface.append(node));
+  const main = document.querySelector('main');
+  main.before(surface);
+  [main, document.querySelector('.footer')].forEach(node => surface.append(node));
 
   const defs = document.createElementNS(svgNS, 'svg');
   defs.classList.add('crt-filter-defs');
@@ -82,9 +82,10 @@
     const width = root.clientWidth;
     const height = innerHeight;
     const padding = height * .5;
+    const surfaceTop = surface.getBoundingClientRect().top + scrollY;
     [filter, map].forEach(node => {
       node.setAttribute('x', '0');
-      node.setAttribute('y', String(scrollY - padding));
+      node.setAttribute('y', String(scrollY - surfaceTop - padding));
       node.setAttribute('width', String(width));
       node.setAttribute('height', String(height * 2));
     });
