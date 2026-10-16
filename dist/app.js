@@ -8,7 +8,7 @@ const concepts = [
 ];
 const grid = $('#showcase-grid');
 function renderConcepts() {
- grid.innerHTML = concepts.map((c,index) => `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><button class="work-open" data-preview="${c.id}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${c.id}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`).join('');
+ grid.innerHTML = concepts.map((c,index) => `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><div class="work-disc ${c.id}" aria-hidden="true"><div class="disc-art"><img src="assets/${c.art}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button class="work-open" data-preview="${c.id}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${c.id}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`).join('');
 }
 renderConcepts();
 const previousConcept = $('#carousel-prev');
@@ -34,6 +34,16 @@ function moveCarousel(direction) { const cards=$$('.work-card',grid); const step
 previousConcept.addEventListener('click',()=>moveCarousel(-1));
 nextConcept.addEventListener('click',()=>moveCarousel(1));
 grid.addEventListener('scroll',updateCarousel,{passive:true});
+grid.addEventListener('wheel',event=>{
+ if(event.ctrlKey)return;
+ const unit=event.deltaMode===1?16:event.deltaMode===2?grid.clientWidth:1;
+ const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*unit;
+ const max=grid.scrollWidth-grid.clientWidth;
+ const next=Math.max(0,Math.min(max,grid.scrollLeft+delta));
+ if(Math.abs(next-grid.scrollLeft)<.5)return;
+ event.preventDefault();
+ grid.scrollLeft=next;
+},{passive:false});
 grid.addEventListener('keydown',event=>{
  if(event.key==='ArrowRight'){event.preventDefault();moveCarousel(1);}
  else if(event.key==='ArrowLeft'){event.preventDefault();moveCarousel(-1);}
