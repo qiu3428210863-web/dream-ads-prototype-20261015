@@ -1,4 +1,4 @@
-/* The native document still scrolls. Only its visible rectangle is filtered. */
+/* Glass lighting never rasterizes or resamples the document content. */
 :root {
   --crt-vignette: .22;
 }
@@ -15,7 +15,7 @@
   background: #f8f8f7;
 }
 html.crt-enabled .crt-surface {
-  filter: url(#crt-lens);
+  filter: none;
 }
 .header {
   z-index: 60;
@@ -42,16 +42,7 @@ html.crt-enabled .crt-surface {
   opacity: var(--crt-vignette);
   box-shadow: inset 0 0 22px 1px rgb(16 8 23 / .1);
 }
-.crt-glass::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 48% 40%, rgb(255 239 252 / .18), transparent 68%),
-    url("assets/crt-grain.svg");
-  opacity: .09;
-  mix-blend-mode: multiply;
-}
+.crt-glass::after { display: none; }
 /* Top-layer dialogs remain crisp and interactive, above the decorative lens. */
 body.modal-open .crt-glass { opacity: .4; }
 @media(max-width:600px) {
