@@ -7,7 +7,7 @@
   <title>Dream Ads — Make Your Dream Ad.</title>
   <meta name="description" content="Small products. Big ideas. A fictional 14-day OpenArt creator challenge. Imagine a product's next campaign and bring it to life.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="crt.css"><script src="app.js" defer></script><script src="crt.js" defer></script>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="crt.css"><link rel="stylesheet" href="showcase.css"><script src="app.js" defer></script><script src="crt.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -34,8 +34,10 @@
  <section class="showcase section wrap" id="showcase" aria-labelledby="showcase-title">
   <div class="section-top"><span class="eyebrow"><span class="section-index">01</span> THE INSPIRATION</span><span class="mono muted">SMALL PRODUCTS. LIMITLESS POSSIBILITIES.</span></div>
   <div class="section-heading"><div><h2 id="showcase-title">Small products.<br><span class="serif">Big ideas.</span></h2><p>Different products. Fresh perspectives.<br>Explore what happens when imagination takes the lead.</p></div><div class="showcase-tools"><button class="icon-button" id="share-button" aria-label="Share this challenge" title="Share this challenge">↗</button><button class="icon-button" id="download-button" aria-label="Download challenge brief" title="Download challenge brief">↓</button></div></div>
-  <div class="category-shell"><div class="category-tabs" role="tablist" aria-label="Filter showcase by category"><button class="category active" role="tab" id="tab-all" aria-controls="showcase-grid" aria-selected="true" tabindex="0" data-filter="all"><span class="category-kicker">EXPLORE</span><strong>All ideas <span>↗</span></strong><span class="category-art">✳</span></button><button class="category" role="tab" id="tab-beauty" aria-controls="showcase-grid" aria-selected="false" tabindex="-1" data-filter="beauty"><span class="category-kicker">BEAUTY</span><strong>A little magic</strong><img src="assets/perfume.svg" alt="" width="130" height="130"></button><button class="category" role="tab" id="tab-lifestyle" aria-controls="showcase-grid" aria-selected="false" tabindex="-1" data-filter="lifestyle"><span class="category-kicker">LIFESTYLE</span><strong>Everyday, reimagined</strong><img src="assets/can.svg" alt="" width="130" height="130"></button><button class="category" role="tab" id="tab-tech" aria-controls="showcase-grid" aria-selected="false" tabindex="-1" data-filter="tech"><span class="category-kicker">TECH</span><strong>Future feels good</strong><img src="assets/headphones.svg" alt="" width="130" height="130"></button></div><span class="category-hint mono">PICK YOUR INSPIRATION ↗</span></div>
-  <div class="showcase-grid" id="showcase-grid" role="tabpanel" aria-labelledby="tab-all" tabindex="0"></div>
+  <div class="showcase-carousel" role="region" aria-roledescription="carousel" aria-label="Dream ad concepts">
+   <div class="showcase-grid" id="showcase-grid" tabindex="0" aria-label="Scroll through dream ad concepts"></div>
+   <div class="carousel-navigation"><span class="carousel-instruction">DRAG TO EXPLORE <span aria-hidden="true">↔</span></span><div class="carousel-controls"><span class="carousel-counter" aria-live="polite">01 / 03</span><button class="icon-button" id="carousel-prev" aria-label="Previous concept">←</button><button class="icon-button" id="carousel-next" aria-label="Next concept">→</button></div></div>
+  </div>
   <div class="showcase-bottom"><span><span class="status-dot"></span> Illustrative concepts · animated storyboards, not final videos</span><a href="#how-it-works">Your idea could be next <span aria-hidden="true">↗</span></a></div>
  </section>
  <section class="details section wrap" id="details" aria-labelledby="details-title">

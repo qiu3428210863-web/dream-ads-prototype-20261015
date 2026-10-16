@@ -1,0 +1,99 @@
+/* 16:9 editorial covers and the pink hover frame from the reference recording. */
+.showcase-carousel{min-width:0}
+.showcase-grid{
+  position:relative;display:flex;flex-wrap:nowrap;align-items:stretch;gap:22px;
+  min-height:0;overflow-x:auto;overflow-y:hidden;padding:5px 3px 15px;
+  scroll-snap-type:x mandatory;scroll-padding-inline:3px;overscroll-behavior-x:contain;
+  scrollbar-width:thin;scrollbar-color:#c35da9 #e9e5e8;cursor:grab;
+  -webkit-overflow-scrolling:touch;
+}
+.showcase-grid::-webkit-scrollbar{height:5px}
+.showcase-grid::-webkit-scrollbar-track{background:#e9e5e8;border-radius:10px}
+.showcase-grid::-webkit-scrollbar-thumb{background:#c35da9;border-radius:10px}
+.showcase-grid.is-dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
+.showcase-grid.is-dragging .work-open{cursor:grabbing}
+.showcase-grid .work-card{
+  flex:0 0 43%;min-width:0;padding:14px;border:0;border-radius:22px;
+  background:#090909;overflow:visible;scroll-snap-align:start;
+  animation:none;box-shadow:none;transform:none;transition:none;
+}
+.showcase-grid .work-card:hover{transform:none;box-shadow:none}
+.work-open{display:block;width:100%;padding:0;border:0;background:transparent;text-align:left;color:#fff;border-radius:16px;cursor:pointer}
+.showcase-grid .work-visual{
+  position:relative;width:100%;height:auto;aspect-ratio:16/9;min-height:0;
+  border-radius:18px;background:#090909;overflow:visible;isolation:isolate;
+}
+.showcase-grid .work-visual::before{display:none}
+.work-visual::after{
+  content:"";position:absolute;inset:-3px;border-radius:21px;padding:3px;
+  background:linear-gradient(130deg,#f7c4e8 4%,#e69ad2 30%,#dc48ba 70%,#f7c4e8);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;pointer-events:none;transition:opacity .22s ease;
+}
+.work-cover{
+  position:absolute;inset:0;border-radius:18px;overflow:hidden;
+  background:radial-gradient(ellipse at 65% 60%,#79526c,#20131d 70%);
+  transform:scale(1);transition:transform .32s cubic-bezier(.22,.7,.2,1);
+}
+.lifestyle .work-cover{background:radial-gradient(ellipse at 65% 65%,#6a7746,#192419 72%)}
+.tech .work-cover{background:radial-gradient(ellipse at 65% 65%,#626171,#171820 72%)}
+.work-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0002,transparent 60%),linear-gradient(0deg,#0003,transparent 70%);pointer-events:none}
+.showcase-grid .work-product{
+  position:absolute;inset:-24% -12% -24% 10%;width:100%;height:148%;object-fit:contain;
+  opacity:.86;transform:rotate(6deg);filter:drop-shadow(0 15px 16px #0005);
+  transition:transform .5s cubic-bezier(.2,.7,.3,1),filter .4s;
+}
+.showcase-grid .cover-wordmark{
+  position:absolute;top:9%;left:50%;width:88px;height:auto;max-width:25%;
+  filter:invert(1);z-index:2;transform:translateX(-50%);opacity:.96;
+}
+.showcase-grid .work-caption{
+  position:absolute;inset:25% 3% auto;z-index:3;text-align:center;
+  font-family:Impact,"Arial Narrow",DreamSans,sans-serif;font-size:clamp(42px,5.8vw,86px);
+  font-weight:900;font-style:normal;line-height:.91;letter-spacing:-.035em;text-transform:uppercase;
+  color:#f9a4df;background:linear-gradient(#fff 4%,#fff2fc 18%,#f6b1e3 43%,#ee4cbe 68%,#d919a0 100%);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  transform:perspective(650px) rotateY(-9deg) rotateZ(-4deg);
+  filter:drop-shadow(1px 5px 0 #6b174f55);text-shadow:none;
+  transition:transform .35s ease;
+}
+.showcase-grid .work-meta{display:block;padding:22px 5px 9px;background:transparent;min-height:100px}
+.showcase-grid .work-meta h3{color:#fff;font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-.03em;transition:color .22s}
+.showcase-grid .work-meta p{color:#858585;font-size:14px;line-height:1.6;margin-top:10px}
+.work-open:focus-visible{outline:none}
+.work-open:focus-visible .work-visual::after{opacity:1}
+.work-open:focus-visible .work-cover{transform:scale(.968)}
+.work-open:focus-visible .work-meta h3{color:#e89bd3}
+@media(hover:hover){
+ .work-open:hover .work-visual::after{opacity:1}
+ .work-open:hover .work-cover{transform:scale(.968)}
+ .work-open:hover .work-meta h3{color:#e89bd3}
+ .work-open:hover .work-caption{transform:perspective(650px) rotateY(-7deg) rotateZ(-4deg) translateY(-2px)}
+ .showcase-grid .work-card:hover .work-product{transform:rotate(3deg) scale(1.025)}
+ .showcase-grid .work-card:hover .cover-wordmark{transform:translateX(-50%)}
+}
+.carousel-navigation{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:15px 3px 0}
+.carousel-instruction{font-size:10px;letter-spacing:.1em;color:#888}
+.carousel-instruction>span{font-size:18px;vertical-align:middle;margin-left:12px;color:#a65991}
+.carousel-controls{display:flex;align-items:center;gap:8px}
+.carousel-counter{font-size:11px;letter-spacing:.08em;color:#777;min-width:63px;margin-right:10px;font-variant-numeric:tabular-nums}
+.carousel-controls .icon-button:disabled{opacity:.32;cursor:default;transform:none;background:#fff}
+@media(min-width:1700px){.showcase-grid .work-caption{font-size:86px}}
+@media(max-width:1100px){.showcase-grid .work-card{flex-basis:55%}.showcase-grid .work-caption{font-size:clamp(48px,7.6vw,80px)}.showcase-grid .work-meta h3{font-size:21px}}
+@media(max-width:600px){
+ .showcase-grid{gap:15px;padding:5px 3px 12px}
+ .showcase-grid .work-card{flex-basis:88%;padding:11px;border-radius:18px}
+ .showcase-grid .work-visual,.work-cover{border-radius:14px}
+ .work-visual::after{border-radius:17px;padding:2px;inset:-2px}
+ .showcase-grid .work-caption{font-size:clamp(34px,10.5vw,60px)}
+ .showcase-grid .cover-wordmark{width:65px}
+ .showcase-grid .work-meta{padding:19px 2px 8px;min-height:98px}
+ .showcase-grid .work-meta h3{font-size:19px}
+ .showcase-grid .work-meta p{font-size:12px;margin-top:8px}
+ .carousel-navigation{gap:10px;padding-top:12px}
+ .carousel-instruction{font-size:9px}.carousel-instruction>span{margin-left:5px}
+ .carousel-counter{font-size:10px;min-width:50px;margin-right:4px}
+ .carousel-controls .icon-button{width:33px;height:33px}
+}
+@media(prefers-reduced-motion:reduce){.work-cover,.work-visual::after,.showcase-grid .work-product,.showcase-grid .work-caption,.showcase-grid .work-meta h3{transition:none!important}}

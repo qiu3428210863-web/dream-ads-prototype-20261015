@@ -1,6 +1,6 @@
 /* The native document still scrolls. Only its visible rectangle is filtered. */
 :root {
-  --crt-vignette: .28;
+  --crt-vignette: .22;
 }
 .crt-filter-defs {
   position: absolute;
@@ -17,6 +17,11 @@
 html.crt-enabled .crt-surface {
   filter: url(#crt-lens);
 }
+.header {
+  z-index: 60;
+  background: #fff;
+  backdrop-filter: none;
+}
 .crt-glass {
   position: fixed;
   inset: 0;
@@ -31,11 +36,11 @@ html.crt-enabled .crt-surface {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 76% 85% at 50% 47%, transparent 41%, rgb(27 19 34 / .22) 75%, rgb(12 7 18 / .8) 100%),
-    linear-gradient(90deg, rgb(22 12 28 / .34), transparent 7%, transparent 93%, rgb(22 12 28 / .34)),
-    linear-gradient(0deg, rgb(22 12 28 / .22), transparent 12%, transparent 88%, rgb(22 12 28 / .22));
+    radial-gradient(ellipse 76% 86% at 50% 50%, transparent 64%, rgb(27 19 34 / .1) 80%, rgb(12 7 18 / .65) 100%),
+    linear-gradient(90deg, rgb(22 12 28 / .46), transparent 4%, transparent 96%, rgb(22 12 28 / .46)),
+    linear-gradient(0deg, rgb(22 12 28 / .28), transparent 6%, transparent 94%, rgb(22 12 28 / .28));
   opacity: var(--crt-vignette);
-  box-shadow: inset 0 0 65px 5px rgb(16 8 23 / .12);
+  box-shadow: inset 0 0 22px 1px rgb(16 8 23 / .1);
 }
 .crt-glass::after {
   content: "";
@@ -50,7 +55,7 @@ html.crt-enabled .crt-surface {
 /* Top-layer dialogs remain crisp and interactive, above the decorative lens. */
 body.modal-open .crt-glass { opacity: .4; }
 @media(max-width:600px) {
-  .crt-glass::before { box-shadow: inset 0 0 28px rgb(16 8 23 / .12); }
+  .crt-glass::before { box-shadow: inset 0 0 14px rgb(16 8 23 / .1); }
   .crt-glass::after { opacity: .075; }
 }
 @media(prefers-reduced-motion:reduce) {
