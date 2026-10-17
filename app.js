@@ -25,15 +25,17 @@ const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter')
 let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,showcaseDock=null;
 let showcaseView='cards',viewAnimations=[],railReentry=false;
 const viewButtons=$$('[data-showcase-view]');
+grid.dataset.view='cards';
+function activeCarouselCards(){return showcaseView==='grid'?carouselCards:carouselCards.slice(0,5);}
 function updateCarousel(){
- const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
- if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(carouselCards.length).padStart(2,'0');lastCarouselIndex=index;}
+ const cards=activeCarouselCards(),left=grid.scrollLeft,index=Math.min(cards.length-1,Math.round(left/(carouselStep||1)));
+ if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(cards.length).padStart(2,'0');lastCarouselIndex=index;}
 }
 function measureCarousel(){
- const first=carouselCards[0],last=carouselCards[carouselCards.length-1];
+ const cards=activeCarouselCards(),first=cards[0],last=cards[cards.length-1];
  const gutter=parseFloat(getComputedStyle(grid).paddingRight)||0;
  // FLIP transforms affect bounding rectangles and scrollWidth, but not layout offsets.
- carouselStep=carouselCards[1].offsetLeft-first.offsetLeft;
+ carouselStep=(cards[1]?.offsetLeft??first.offsetLeft+first.offsetWidth)-first.offsetLeft;
  carouselLimit=showcaseView==='grid'?0:Math.max(0,last.offsetLeft+last.offsetWidth+gutter-grid.clientWidth);
  const rail=grid.getBoundingClientRect(),header=$('.header').getBoundingClientRect();
  carouselPinY=Math.max(0,rail.top+scrollY+first.offsetTop+first.offsetHeight*.5-(innerHeight+header.height)*.5);
@@ -88,6 +90,13 @@ function setShowcaseView(view){
  if(!reducedCarouselMotion.matches&&typeof carouselCards[0]?.animate==='function'){
   viewAnimations=carouselCards.map((card,index)=>{
    const from=before[index],to=card.getBoundingClientRect();
+    const wasVisible=from.width>0&&from.height>0,isVisible=to.width>0&&to.height>0;
+    if(!isVisible)return null;
+    if(!wasVisible)return card.animate([
+     {transform:'scale(.82)',transformOrigin:'center center'},
+     {transform:'scale(1.025)',transformOrigin:'center center',offset:.82},
+     {transform:'scale(1)',transformOrigin:'center center'}
+    ],{duration:760,easing:'cubic-bezier(.2,.72,.24,1)',fill:'none'});
    if(fromView==='cards'&&view==='grid'){
     const dx=from.left+from.width/2-(to.left+to.width/2),dy=from.top+from.height/2-(to.top+to.height/2);
     return card.animate([
@@ -103,7 +112,7 @@ function setShowcaseView(view){
     {transform:'translate(0,0) scale(1.045)',offset:.8},
     {transform:'translate(0,0) scale(1)',offset:1}
    ],{duration:860,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
-  });
+  }).filter(Boolean);
   const batch=viewAnimations;let remaining=batch.length;
   batch.forEach(animation=>{animation.onfinish=()=>{
    if(viewAnimations!==batch||--remaining!==0)return;

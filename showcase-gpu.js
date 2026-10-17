@@ -7,6 +7,12 @@
  root.dataset.crtShowcaseGpuInitialized='true';
  const inlineAssets=window.DreamShowcaseAssets||{};
  grid.querySelectorAll('img').forEach(image=>{const name=image.getAttribute('src')?.split('/').pop();if(inlineAssets[name])image.src=inlineAssets[name];});
+ const cards=[...grid.querySelectorAll('.work-card')].map(card=>({
+  card,disc:card.querySelector('.work-disc'),discImage:card.querySelector('.work-disc img'),
+  visual:card.querySelector('.work-visual'),cover:card.querySelector('.work-cover'),product:card.querySelector('.work-product'),
+  logo:card.querySelector('.cover-wordmark'),caption:card.querySelector('.work-caption'),meta:card.querySelector('.work-meta'),
+  title:card.querySelector('.work-meta h3'),sub:card.querySelector('.work-meta p'),open:card.querySelector('.work-open'),hoverVideo:card.querySelector('.work-hover-video')
+ }));
  const output=document.createElement('canvas');output.className='crt-gpu-showcase-layer';output.setAttribute('aria-hidden','true');output.setAttribute('role','presentation');
  const scene=document.createElement('canvas'),ctx=scene.getContext('2d',{alpha:true});
  const gl=output.getContext('webgl2',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});
@@ -38,7 +44,7 @@
   color=vec4(red.r,center.g,blue.b,center.a)*coverage;
  }`;
  function shader(type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(value));return value;}
- let program,texture,vao,anisotropy,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,transitionEnd=0,active=false,failed=false,suspended=false,textureWidth=0,textureHeight=0;
+ let program,texture,vao,anisotropy,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,mipmapTimer=0,transitionEnd=0,active=false,failed=false,suspended=false,textureWidth=0,textureHeight=0;
  try{
   program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
   if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
@@ -63,8 +69,8 @@
   const g=ctx.createRadialGradient(rect.left+rect.width*.66,rect.top+rect.height*.58,rect.height*.04,rect.left+rect.width*.66,rect.top+rect.height*.58,rect.width*.82);
   g.addColorStop(0,palette[0]);g.addColorStop(.55,palette[1]);g.addColorStop(1,palette[2]);return g;
  }
- function paintDisc(card){
-  const disc=card.querySelector('.work-disc'),img=disc?.querySelector('img');
+ function paintDisc(parts){
+  const {card,disc}=parts,img=parts.discImage;
   if(!disc||(!card.matches(':hover')&&!card.matches(':focus-within')))return;
   const r=disc.getBoundingClientRect();if(r.bottom<-80||r.top>innerHeight+80)return;
   const cx=r.left+r.width/2,cy=r.top+r.height/2,gr=ctx.createConicGradient(.2,cx,cy);
@@ -73,15 +79,14 @@
   if(img?.complete&&img.naturalWidth){ctx.beginPath();ctx.arc(cx,cy,r.width*.42,0,Math.PI*2);ctx.clip();const ir=img.getBoundingClientRect();drawImage(img,ir);}
   ctx.restore();ctx.save();ctx.strokeStyle='#ffffffd9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r.width*.095,0,Math.PI*2);ctx.stroke();ctx.restore();
  }
- function paintCard(card){
-  const cardRect=card.getBoundingClientRect();if(cardRect.bottom<-120||cardRect.top>innerHeight+120)return;
-  const visual=card.querySelector('.work-visual'),cover=card.querySelector('.work-cover'),product=card.querySelector('.work-product'),logo=card.querySelector('.cover-wordmark'),caption=card.querySelector('.work-caption'),meta=card.querySelector('.work-meta'),title=meta?.querySelector('h3'),sub=meta?.querySelector('p');
+ function paintCard(parts,cardRect){
+  const {card,visual,cover,product,logo,caption,meta,title,sub}=parts;
   if(!visual||!cover||!meta)return;
   const v=box(visual.getBoundingClientRect()),m=box(meta.getBoundingClientRect()),radius=parseFloat(getComputedStyle(card).borderRadius)||18;
   ctx.save();rounded(ctx,cardRect.left,cardRect.top,cardRect.width,cardRect.height,radius);ctx.fillStyle='#151515';ctx.fill();ctx.clip();
-  rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.fillStyle=productBackground(card.querySelector('.work-open').dataset.category,v);ctx.fill();
+  rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.fillStyle=productBackground(parts.open.dataset.category,v);ctx.fill();
   ctx.save();rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.clip();
-  const pr=product.getBoundingClientRect(),hoverVideo=card.querySelector('.work-hover-video');
+  const pr=product.getBoundingClientRect(),hoverVideo=parts.hoverVideo;
   if(hoverVideo?.readyState>=2){drawImage(hoverVideo,box(hoverVideo.getBoundingClientRect()));}
   else if(card.matches('.is-previewing')){const phase=performance.now()/1000;ctx.save();ctx.translate(pr.left+pr.width/2,pr.top+pr.height/2);ctx.rotate(Math.sin(phase*1.4)*.035);ctx.scale(1+Math.sin(phase*1.1)*.025,1+Math.sin(phase*1.1)*.025);drawImage(product,{left:-pr.width/2,top:-pr.height/2,width:pr.width,height:pr.height},getComputedStyle(product).filter);ctx.restore();}
   else drawImage(product,pr,getComputedStyle(product).filter);
@@ -101,7 +106,7 @@
    ctx.save();ctx.font='600 10px Arial,sans-serif';const labelWidth=ctx.measureText(label).width+18,labelX=v.x+14,labelY=v.y+v.h-16;
    ctx.save();rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.clip();rounded(ctx,labelX,labelY-18,labelWidth,24,12);ctx.fillStyle='#431a1ae8';ctx.fill();ctx.fillStyle='#ffbcbc';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,labelX+9,labelY-6);ctx.restore();ctx.restore();
   }
-  if(card.matches(':hover')||card.querySelector('.work-open:focus-visible')){const stroke=1.25,gap=6;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;rounded(ctx,v.x-gap+stroke/2,v.y-gap+stroke/2,v.w+gap*2-stroke,v.h+gap*2-stroke,24);ctx.stroke();ctx.restore();}
+  if(card.matches(':hover')||parts.open.matches(':focus-visible')){const stroke=1.25,gap=6;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;rounded(ctx,v.x-gap+stroke/2,v.y-gap+stroke/2,v.w+gap*2-stroke,v.h+gap*2-stroke,24);ctx.stroke();ctx.restore();}
   ctx.restore();
  }
  function size(){
@@ -120,24 +125,34 @@
   gl.viewport(0,0,ow,oh);gl.uniform2f(uniformSize,ow,oh);output.dataset.outputDpr=String(outputRatio);output.dataset.sourceDpr=String(sourceRatio);output.dataset.sourcePixels=String(quality?.sourcePixels??sw*sh);output.dataset.anisotropy=String(Boolean(anisotropy));
  }
  function render(){
-  const cards=[...grid.querySelectorAll('.work-card')];if(failed||suspended||!cards.length)return false;
+  if(failed||suspended||!cards.length)return false;
+  const sectionRect=section.getBoundingClientRect();
+  if(sectionRect.bottom<0||sectionRect.top>innerHeight){deactivate();return false;}
+  const activeCards=grid.dataset.view==='grid'?cards:cards.slice(0,5);
+  const visibleCards=activeCards.map(parts=>({parts,rect:parts.card.getBoundingClientRect()})).filter(({rect})=>rect.bottom>-120&&rect.top<innerHeight+120&&rect.width>0&&rect.height>0);
+  if(!visibleCards.length){deactivate();return false;}
   const scroll=window.DreamScroll?.position?.()??{x:0,y:scrollY};
   if(!dirty&&scroll.x===lastX&&scroll.y===lastY)return false;
   dirty=false;lastX=scroll.x;lastY=scroll.y;
   const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),scale=scene.width/width;
   ctx.setTransform(scale,0,0,scale,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,width,height);
-  try{cards.forEach(paintDisc);cards.forEach(paintCard);}
+  try{visibleCards.forEach(({parts})=>paintDisc(parts));visibleCards.forEach(({parts,rect})=>paintCard(parts,rect));}
   catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
   try{
    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
-   gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,scene);gl.generateMipmap(gl.TEXTURE_2D);
+   // Avoid rebuilding the complete mip chain on every scroll/preview frame.
+   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+   gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,scene);
    const uploadError=gl.getError();if(uploadError!==gl.NO_ERROR)throw Error('WebGL texture upload failed ('+uploadError+')');
-   gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
+   drawOutput();scheduleMipmaps();
    const drawError=gl.getError();if(drawError!==gl.NO_ERROR)throw Error('WebGL draw failed ('+drawError+')');
   }catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
   if(!active){document.body.append(output);root.classList.add('crt-gpu-showcase');active=true;}
   return false;
  }
+ function deactivate(){if(!active)return;clearTimeout(mipmapTimer);mipmapTimer=0;root.classList.remove('crt-gpu-showcase');output.remove();active=false;lastX=lastY=NaN;dirty=true;}
+ function drawOutput(){gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);}
+ function scheduleMipmaps(){clearTimeout(mipmapTimer);mipmapTimer=setTimeout(()=>{mipmapTimer=0;if(failed||suspended||!active)return;try{gl.bindTexture(gl.TEXTURE_2D,texture);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);drawOutput();}catch(error){console.warn('Showcase mipmap refresh:',error.message);}},140);}
  function animateFor(duration=700){
   if(reducedMotion.matches)duration=0;
   transitionEnd=Math.max(transitionEnd,performance.now()+duration);
