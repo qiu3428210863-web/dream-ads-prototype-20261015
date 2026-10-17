@@ -1,4 +1,4 @@
-/* Glass lighting never rasterizes or resamples the document content. */
+/* WebGL supplies radial glass refraction; this fixed layer adds only subtle edge falloff. */
 :root {
   --crt-vignette: .22;
 }
@@ -16,6 +16,7 @@
 }
 html.crt-enabled .crt-surface {
   filter: none;
+  opacity: 0;
 }
 .header {
   z-index: 60;
@@ -58,3 +59,8 @@ body.modal-open .crt-glass { opacity: .4; }
   html.crt-enabled .crt-surface { filter: none; }
   .crt-glass,.crt-filter-defs { display: none; }
 }
+
+#crt-display{position:fixed;top:0;left:0;z-index:40;pointer-events:none;display:none}
+html.crt-enabled #crt-display{display:block}
+html.crt-enabled .crt-surface .work-cover,html.crt-enabled .crt-surface .work-caption,html.crt-enabled .crt-surface .work-product{transition:none!important}
+@media print{.crt-surface{opacity:1!important}#crt-display{display:none!important}}
