@@ -38,7 +38,7 @@
   color=vec4(red.r,center.g,blue.b,center.a)*coverage;
  }`;
  function shader(type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(value));return value;}
- let program,texture,vao,anisotropy,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,transitionEnd=0,active=false,failed=false,suspended=false;
+ let program,texture,vao,anisotropy,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,transitionEnd=0,active=false,failed=false,suspended=false,textureWidth=0,textureHeight=0;
  try{
   program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
   if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
@@ -115,6 +115,7 @@
   const ow=Math.max(1,Math.round(width*outputRatio)),oh=Math.max(1,Math.round(height*outputRatio));
   const sw=Math.max(1,Math.round(width*sourceRatio)),sh=Math.max(1,Math.round(height*sourceRatio));
   if(output.width!==ow||output.height!==oh||scene.width!==sw||scene.height!==sh){output.width=ow;output.height=oh;scene.width=sw;scene.height=sh;dirty=true;}
+  if(textureWidth!==sw||textureHeight!==sh){gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,sw,sh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);textureWidth=sw;textureHeight=sh;}
   ctx.setTransform(sourceRatio,0,0,sourceRatio,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,width,height);
   gl.viewport(0,0,ow,oh);gl.uniform2f(uniformSize,ow,oh);output.dataset.outputDpr=String(outputRatio);output.dataset.sourceDpr=String(sourceRatio);output.dataset.sourcePixels=String(quality?.sourcePixels??sw*sh);output.dataset.anisotropy=String(Boolean(anisotropy));
  }
@@ -129,7 +130,7 @@
   catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
   try{
    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
-   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,scene);gl.generateMipmap(gl.TEXTURE_2D);
+   gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,scene);gl.generateMipmap(gl.TEXTURE_2D);
    const uploadError=gl.getError();if(uploadError!==gl.NO_ERROR)throw Error('WebGL texture upload failed ('+uploadError+')');
    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
    const drawError=gl.getError();if(drawError!==gl.NO_ERROR)throw Error('WebGL draw failed ('+drawError+')');
