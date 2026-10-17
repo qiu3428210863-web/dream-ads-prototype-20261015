@@ -101,7 +101,7 @@
    ctx.save();ctx.font='600 10px Arial,sans-serif';const labelWidth=ctx.measureText(label).width+18,labelX=v.x+14,labelY=v.y+v.h-16;
    ctx.save();rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.clip();rounded(ctx,labelX,labelY-18,labelWidth,24,12);ctx.fillStyle='#431a1ae8';ctx.fill();ctx.fillStyle='#ffbcbc';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,labelX+9,labelY-6);ctx.restore();ctx.restore();
   }
-  if(card.matches(':hover')||card.querySelector('.work-open:focus-visible')){const stroke=1.25;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;rounded(ctx,v.x+stroke/2,v.y+stroke/2,v.w-stroke,v.h-stroke,18);ctx.stroke();ctx.restore();}
+  if(card.matches(':hover')||card.querySelector('.work-open:focus-visible')){const stroke=1.25,gap=6;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;rounded(ctx,v.x-gap+stroke/2,v.y-gap+stroke/2,v.w+gap*2-stroke,v.h+gap*2-stroke,24);ctx.stroke();ctx.restore();}
   ctx.restore();
  }
  function size(){
