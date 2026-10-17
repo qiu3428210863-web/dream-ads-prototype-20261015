@@ -22,6 +22,7 @@
   border-radius:18px;background:#090909;overflow:visible;isolation:isolate;
 }
 .showcase-grid .work-visual::before{display:none}
+.showcase-grid .work-visual{transform:scale(1);transform-origin:center;transition:transform .32s ease-in-out}
 .work-visual::after{
   content:"";position:absolute;inset:-6px;border-radius:24px;padding:1.25px;
   background:linear-gradient(130deg,#f7c4e8 4%,#e69ad2 30%,#dc48ba 70%,#f7c4e8);
@@ -61,11 +62,13 @@
 .showcase-grid .work-meta p{color:#858585;font-size:14px;line-height:1.6;margin-top:10px}
 .work-open:focus-visible{outline:none}
 .work-open:focus-visible .work-visual::after{opacity:1}
-.work-open:focus-visible .work-cover{transform:scale(.997)}
+.work-open:focus-visible .work-visual{transform:scale(.997)}
+.work-open:focus-visible .work-cover{transform:scale(1.003009)}
 .work-open:focus-visible .work-meta h3{color:#e89bd3}
 @media(hover:hover){
  .work-open:hover .work-visual::after{opacity:1}
- .work-open:hover .work-cover{transform:scale(.997)}
+ .work-open:hover .work-visual{transform:scale(.997)}
+ .work-open:hover .work-cover{transform:scale(1.003009)}
  .work-open:hover .work-meta h3{color:#e89bd3}
  .work-open:hover .work-caption{transform:perspective(650px) rotateY(-7deg) rotateZ(-4deg) translateY(-2px)}
  .showcase-grid .work-card:hover .work-product{transform:rotate(3deg) scale(1.025)}
