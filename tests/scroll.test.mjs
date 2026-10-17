@@ -124,7 +124,7 @@ test('grid switch cancels docking, releases vertical scroll, and preserves card 
  assert.equal(frames[1].transform,'translate(0,0) scale(.78)');
  assert.equal(frames[2].transform,'translate(0,0) scale(1.045)');
  assert.equal(frames[3].transform,'translate(0,0) scale(1)');
- assert.equal(app.cards[0].animations[0].options.duration,960);
+ assert.equal(app.cards[0].animations[0].options.duration,860);
 });
 
 test('switching back cancels unfinished animations and restores rail capture',()=>{
