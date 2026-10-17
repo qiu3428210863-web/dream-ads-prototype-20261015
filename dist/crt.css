@@ -6,6 +6,17 @@
  position:fixed;inset:0;z-index:10;width:100%;height:100%;
  overflow:clip;contain:strict;isolation:isolate;
 }
+.crt-gpu-showcase-layer{position:fixed;inset:0;z-index:11;width:100%;height:100%;pointer-events:none;contain:strict}
+html.crt-gpu-showcase .showcase-grid .work-card{background:transparent}
+html.crt-gpu-showcase .showcase-grid .work-open{background:transparent;color:transparent}
+html.crt-gpu-showcase .showcase-grid .work-visual,
+html.crt-gpu-showcase .showcase-grid .work-cover{background:transparent}
+html.crt-gpu-showcase .showcase-grid .work-visual::after{opacity:0!important}
+html.crt-gpu-showcase .showcase-grid .work-product,
+html.crt-gpu-showcase .showcase-grid .cover-wordmark,
+html.crt-gpu-showcase .showcase-grid .work-caption,
+html.crt-gpu-showcase .showcase-grid .work-meta,
+html.crt-gpu-showcase .showcase-grid .work-disc{opacity:0!important}
 html.crt-enabled .crt-viewport{filter:url(#crt-lens)}
 .crt-surface{
  display:flow-root;width:100%;isolation:isolate;background:#fafafa;

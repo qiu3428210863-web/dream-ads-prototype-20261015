@@ -1,0 +1,136 @@
+/* Analytical GPU lens for the showcase cards; real DOM stays interactive and accessible. */
+(()=>{
+ 'use strict';
+ const root=document.documentElement,grid=document.querySelector('#showcase-grid'),section=document.querySelector('#showcase'),contrast=matchMedia('(forced-colors: active)'),reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+ if(!grid||!section||!window.WebGL2RenderingContext||contrast.matches)return;
+ const inlineAssets=window.DreamShowcaseAssets||{};
+ grid.querySelectorAll('img').forEach(image=>{const name=image.getAttribute('src')?.split('/').pop();if(inlineAssets[name])image.src=inlineAssets[name];});
+ const output=document.createElement('canvas');output.className='crt-gpu-showcase-layer';output.setAttribute('aria-hidden','true');output.setAttribute('role','presentation');
+ const scene=document.createElement('canvas'),ctx=scene.getContext('2d',{alpha:true});
+ const gl=output.getContext('webgl2',{alpha:true,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});
+ if(!ctx||!gl)return;
+ const vertex=`#version 300 es
+ void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.0-1.0,0.0,1.0);}`;
+ const fragment=`#version 300 es
+ precision highp float;
+ uniform sampler2D uScene;
+ uniform vec2 uOutputSize;
+ uniform float uCurvature;
+ out vec4 color;
+ void main(){
+  vec2 uv=gl_FragCoord.xy/uOutputSize;
+  vec2 p=uv-vec2(.5);
+  float r=length(p);
+  float factor=(1.0-.3655*uCurvature)*(1.0+uCurvature*r*r*r);
+  vec2 sourceUV=vec2(.5)+p*factor;
+  color=texture(uScene,sourceUV);
+ }`;
+ function shader(type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(value));return value;}
+ let program,texture,vao,uniformSize,uniformCurvature,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,transitionEnd=0,active=false,failed=false,suspended=false;
+ try{
+  program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+  gl.useProgram(program);vao=gl.createVertexArray();gl.bindVertexArray(vao);texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  uniformSize=gl.getUniformLocation(program,'uOutputSize');uniformCurvature=gl.getUniformLocation(program,'uCurvature');
+  gl.uniform1i(gl.getUniformLocation(program,'uScene'),0);gl.uniform1f(uniformCurvature,window.DreamLens?.curvature??.16);
+ }catch(error){console.warn('Showcase GPU lens:',error.message);return;}
+ function rounded(c,x,y,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();
+ }
+ function box(rect){return {x:rect.left,y:rect.top,w:rect.width,h:rect.height};}
+ function drawImage(image,rect,filter='none'){
+  if(!image?.complete||!image.naturalWidth||rect.width<1||rect.height<1)return;
+  ctx.save();ctx.filter=filter;ctx.drawImage(image,rect.left,rect.top,rect.width,rect.height);ctx.restore();
+ }
+ function productBackground(theme,rect){
+  const palette=theme==='lifestyle'?['#1b281b','#71814a']:theme==='tech'?['#191a22','#737181']:['#261925','#876079'];
+  const g=ctx.createRadialGradient(rect.left+rect.width*.66,rect.top+rect.height*.64,rect.height*.04,rect.left+rect.width*.66,rect.top+rect.height*.64,rect.width*.82);
+  g.addColorStop(0,palette[1]);g.addColorStop(1,palette[0]);return g;
+ }
+ function paintDisc(card){
+  const disc=card.querySelector('.work-disc'),img=disc?.querySelector('img');
+  if(!disc||(!card.matches(':hover')&&!card.matches(':focus-within')))return;
+  const r=disc.getBoundingClientRect();if(r.bottom<-80||r.top>innerHeight+80)return;
+  const cx=r.left+r.width/2,cy=r.top+r.height/2,gr=ctx.createConicGradient(.2,cx,cy);
+  ['#d8dce1','#f9fdff','#afc8d9','#efd4ef','#faffff','#abb8bd','#e1d4f0','#fffcea','#b8dcdf','#f8ebf4','#d8dce1'].forEach((color,i)=>gr.addColorStop(i/10,color));
+  ctx.save();ctx.fillStyle=gr;ctx.beginPath();ctx.arc(cx,cy,r.width/2,0,Math.PI*2);ctx.fill();
+  if(img?.complete&&img.naturalWidth){ctx.beginPath();ctx.arc(cx,cy,r.width*.42,0,Math.PI*2);ctx.clip();const ir=img.getBoundingClientRect();drawImage(img,ir);}
+  ctx.restore();ctx.save();ctx.strokeStyle='#ffffffd9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r.width*.095,0,Math.PI*2);ctx.stroke();ctx.restore();
+ }
+ function paintCard(card){
+  const cardRect=card.getBoundingClientRect();if(cardRect.bottom<-120||cardRect.top>innerHeight+120)return;
+  const visual=card.querySelector('.work-visual'),cover=card.querySelector('.work-cover'),product=card.querySelector('.work-product'),logo=card.querySelector('.cover-wordmark'),caption=card.querySelector('.work-caption'),meta=card.querySelector('.work-meta'),title=meta?.querySelector('h3'),sub=meta?.querySelector('p');
+  if(!visual||!cover||!meta)return;
+  const v=box(visual.getBoundingClientRect()),m=box(meta.getBoundingClientRect()),radius=parseFloat(getComputedStyle(card).borderRadius)||18;
+  ctx.save();rounded(ctx,cardRect.left,cardRect.top,cardRect.width,cardRect.height,radius);ctx.fillStyle='#090909';ctx.fill();ctx.clip();
+  rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.fillStyle=productBackground(card.querySelector('.work-open').dataset.category,v);ctx.fill();
+  ctx.save();rounded(ctx,v.x,v.y,v.w,v.h,18);ctx.clip();
+  const pr=product.getBoundingClientRect();drawImage(product,pr,getComputedStyle(product).filter);
+  const lr=logo.getBoundingClientRect();drawImage(logo,lr,'invert(1)');
+  const cs=getComputedStyle(caption),fontSize=parseFloat(cs.fontSize)||60,line=parseFloat(cs.lineHeight)||fontSize*.91;
+  const lines=caption.innerText.split(/\n|\r/).map(value=>value.trim()).filter(Boolean),centerX=v.x+v.w/2;
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font=`900 ${fontSize}px ${cs.fontFamily||'Impact, sans-serif'}`;ctx.shadowColor='#6b174f88';ctx.shadowBlur=0;ctx.shadowOffsetY=5;
+  ctx.save();ctx.translate(centerX,v.y+v.h*.25+fontSize);ctx.rotate((card.matches(':hover')?-7:-4)*Math.PI/180);
+  lines.forEach((text,index)=>{const y=index*line;const gradient=ctx.createLinearGradient(0,y-fontSize,0,y+4);gradient.addColorStop(0,'#ffffff');gradient.addColorStop(.34,'#f6b1e3');gradient.addColorStop(.72,'#ee4cbe');gradient.addColorStop(1,'#d919a0');ctx.fillStyle=gradient;ctx.fillText(text.toUpperCase(),0,y);});
+  ctx.restore();
+  ctx.restore();
+  ctx.fillStyle='#090909';ctx.fillRect(m.x,m.y,m.w,m.h);
+  if(title){const r=title.getBoundingClientRect(),style=getComputedStyle(title);ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||23}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#fff';ctx.fillText(title.innerText,r.left,r.top);}
+  if(sub){const r=sub.getBoundingClientRect(),style=getComputedStyle(sub);ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||14}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#858585';ctx.fillText(sub.innerText,r.left,r.top);}
+  if(card.querySelector('.work-open:focus-visible')){ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=3;rounded(ctx,v.x-2,v.y-2,v.w+4,v.h+4,20);ctx.stroke();ctx.restore();}
+  ctx.restore();
+ }
+ function size(){
+  const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),dpr=Math.max(1,window.devicePixelRatio||1);
+  const maxTexture=gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  const outputRatio=Math.min(dpr,4,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
+  if(outputRatio<1){suspended=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;return;}
+  suspended=false;
+  const sourceRatio=Math.min(outputRatio*1.5,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
+  const ow=Math.max(1,Math.round(width*outputRatio)),oh=Math.max(1,Math.round(height*outputRatio));
+  const sw=Math.max(1,Math.round(width*sourceRatio)),sh=Math.max(1,Math.round(height*sourceRatio));
+  if(output.width!==ow||output.height!==oh||scene.width!==sw||scene.height!==sh){output.width=ow;output.height=oh;scene.width=sw;scene.height=sh;dirty=true;}
+  ctx.setTransform(sourceRatio,0,0,sourceRatio,0,0);ctx.clearRect(0,0,width,height);
+  gl.viewport(0,0,ow,oh);gl.uniform2f(uniformSize,ow,oh);output.dataset.outputDpr=String(outputRatio);output.dataset.sourceDpr=String(sourceRatio);
+ }
+ function render(){
+  const cards=[...grid.querySelectorAll('.work-card')];if(failed||suspended||!cards.length)return false;
+  const scroll=window.DreamScroll?.position?.()??{x:0,y:scrollY};
+  if(!dirty&&scroll.x===lastX&&scroll.y===lastY)return false;
+  dirty=false;lastX=scroll.x;lastY=scroll.y;
+  const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),scale=scene.width/width;
+  ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,width,height);
+  try{cards.forEach(paintDisc);cards.forEach(paintCard);}
+  catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
+  try{
+   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,scene);
+   const uploadError=gl.getError();if(uploadError!==gl.NO_ERROR)throw Error('WebGL texture upload failed ('+uploadError+')');
+   gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
+   const drawError=gl.getError();if(drawError!==gl.NO_ERROR)throw Error('WebGL draw failed ('+drawError+')');
+  }catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
+  if(!active){document.body.append(output);root.classList.add('crt-gpu-showcase');active=true;}
+  return false;
+ }
+ function animateFor(duration=700){
+  if(reducedMotion.matches)duration=0;
+  transitionEnd=Math.max(transitionEnd,performance.now()+duration);
+  if(!raf)raf=requestAnimationFrame(function animate(time){raf=0;dirty=true;render();if(time<transitionEnd)raf=requestAnimationFrame(animate);});
+ }
+ function invalidate(){dirty=true;animateFor();}
+ function resize(){if(resizeToken)return;resizeToken=requestAnimationFrame(()=>{resizeToken=0;size();render();});}
+ size();render();
+ output.addEventListener('webglcontextlost',event=>{event.preventDefault();failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;});
+ window.DreamScroll?.onFrame(()=>render());
+ addEventListener('resize',resize,{passive:true});addEventListener('pageshow',resize);
+ if('ResizeObserver' in window)new ResizeObserver(resize).observe(section);
+ let densityQuery;
+ function watchDensity(){densityQuery?.removeEventListener?.('change',densityChanged);densityQuery?.removeListener?.(densityChanged);densityQuery=matchMedia(`(resolution: ${window.devicePixelRatio||1}dppx)`);if(densityQuery.addEventListener)densityQuery.addEventListener('change',densityChanged);else densityQuery.addListener?.(densityChanged);}
+ function densityChanged(){watchDensity();resize();}watchDensity();contrast.addEventListener?.('change',()=>{if(contrast.matches){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;}});
+ grid.addEventListener('pointerover',invalidate);grid.addEventListener('pointerout',invalidate);grid.addEventListener('focusin',invalidate);grid.addEventListener('focusout',invalidate);
+ grid.addEventListener('load',invalidate,true);
+ new MutationObserver(()=>{dirty=true;animateFor(1000);}).observe(grid,{attributes:true,attributeFilter:['data-view']});
+ document.fonts?.ready?.then(invalidate);
+})();

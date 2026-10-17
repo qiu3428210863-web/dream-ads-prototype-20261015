@@ -105,7 +105,7 @@ test('pixel density and memory bound reconstruction workload independently of OS
  const lens=model();
  for(const [w,h,dpr,memory,cores,count] of [[1440,900,1,8,8,4],[1920,1080,1,8,8,2],[390,844,3,4,8,1],[2560,1440,2,16,16,1],[1440,900,1.25,8,4,2]]){
   const quality=lens.quality(w,h,dpr,memory,cores);
-  assert.equal(quality.taps.length,count);assert.ok(quality.width*quality.height<=524288);
+  assert.equal(quality.taps.length,count);assert.ok(quality.width*quality.height<=131072);
   for(const [x,y] of quality.taps){assert.ok(Math.abs(x*dpr)<=.25);assert.ok(Math.abs(y*dpr)<=.25);}
  }
 });
