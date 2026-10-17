@@ -240,7 +240,8 @@ test('showcase plays previews inside the hovered thumbnail and keeps the control
  assert.match(showcaseGpuSource,/rounded\(ctx,v\.x,v\.y,v\.w,v\.h,18\);ctx\.clip\(\)/);
  assert.match(showcaseGpuSource,/ctx\.lineWidth=stroke;rounded\(ctx,v\.x-gap\+stroke\/2,v\.y-gap\+stroke\/2,v\.w\+gap\*2-stroke,v\.h\+gap\*2-stroke,24\)/);
  const showcaseCss=readFileSync(new URL('../dist/showcase.css',import.meta.url),'utf8');
- assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(\.997\)\}/);
+ assert.match(showcaseCss,/\.work-open:hover \.work-visual\{transform:scale\(\.997\)\}/);
+ assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(1\.003009\)\}/);
  assert.match(showcaseCss,/inset:-6px;border-radius:24px;padding:1\.25px/);
  assert.match(showcaseCss,/transition:transform \.32s ease-in-out/);
 });
