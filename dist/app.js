@@ -87,11 +87,6 @@ function setShowcaseView(view){
   viewAnimations=carouselCards.map((card,index)=>{
    const from=before[index],to=card.getBoundingClientRect();
    if(fromView==='cards'&&view==='grid'){
-    const visible=from.right>0&&from.left<innerWidth&&from.bottom>0&&from.top<innerHeight;
-    if(!visible)return card.animate([
-     {opacity:0,transform:'scale(.96)',transformOrigin:'center center',offset:0},
-     {opacity:1,transform:'scale(1)',transformOrigin:'center center',offset:1}
-    ],{duration:480,delay:Math.max(0,index-2)*42,easing:'cubic-bezier(.2,.72,.24,1)',fill:'none'});
     const dx=from.left+from.width/2-(to.left+to.width/2),dy=from.top+from.height/2-(to.top+to.height/2);
     return card.animate([
      {transform:`translate(${dx}px,${dy}px) scale(${from.width/to.width},${from.height/to.height})`,transformOrigin:'center center',offset:0},

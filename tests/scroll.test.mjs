@@ -108,6 +108,7 @@ test('reversing during arrival cancels docking and does not leave an input lock'
 test('grid switch cancels docking, releases vertical scroll, and preserves card nodes',()=>{
  const app=boot();app.wheel(400);app.advance(8);
  assert.ok(app.evaluate('showcaseDock'));
+ app.cards.slice(3).forEach((card,index)=>{const left=1800+index*584;card.getBoundingClientRect=()=>({left,top:300,width:560,height:450,right:left+560,bottom:750});});
  app.viewButtons[1].dispatchEvent({type:'click'});
  assert.equal(app.evaluate('showcaseView'),'grid');
  assert.equal(app.evaluate('showcaseDock'),null);
@@ -126,6 +127,13 @@ test('grid switch cancels docking, releases vertical scroll, and preserves card 
  assert.equal(frames[3].transform,'translate(0,0) scale(1)');
  assert.equal(frames[0].transformOrigin,'center center');
  assert.equal(app.cards[0].animations[0].options.duration,900);
+ app.cards.slice(3).forEach(card=>{
+  const offscreenFrames=card.animations[0].keyframes;
+  assert.equal(offscreenFrames.length,4,'offscreen cards use the full position transition too');
+  assert.match(offscreenFrames[0].transform,/^translate\(/);
+  assert.equal(offscreenFrames[0].transformOrigin,'center center');
+  assert.equal('opacity' in offscreenFrames[0],false,'opacity reveal cannot flicker above the curved canvas');
+ });
 });
 
 test('switching back cancels unfinished animations and restores rail capture',()=>{
