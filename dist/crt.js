@@ -10,28 +10,28 @@
  const rail=document.querySelector('#showcase-grid'),cards=[...rail.querySelectorAll('.work-card')];
  let width=0,height=0,surfaceTop=0,sourceWidth=1,sourceHeight=1,row=[0,0],cardBoxes=[],coverBoxes=[],titleBoxes=[];
  let ready=false,capturing=false,pending=false,captureTimer=0,lastTime=0,pointer=null,redirecting=false;
- const hover=[0,0,0],grayImages=new Map(),textures=[];
+ const hover=Array(cards.length).fill(0),grayImages=new Map(),textures=[],CURVE=.24;
  const wake=()=>window.DreamScroll?.requestFrame();
  function viewport(){width=root.clientWidth;height=innerHeight;root.style.setProperty('--viewport-width',width+'px');const ratio=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);canvas.style.width=width+'px';canvas.style.height=height+'px';if(gl)gl.viewport(0,0,canvas.width,canvas.height);}
  function position(){return window.DreamScroll?.position()||{x:rail.scrollLeft,y:scrollY};}
- function unwarp(x,y){const px=x/width-.5,py=y/height-.5,r=Math.hypot(px,py),factor=(1-.3655*.16)*(1+.16*r*r*r);return{x:(.5+px*factor)*width,y:(.5+py*factor)*height};}
+ function unwarp(x,y){const aspect=width/height,px=(x/width-.5)*aspect,py=y/height-.5,r=Math.hypot(px,py),factor=1.+CURVE*r*r;return{x:(.5+px*factor/aspect)*width,y:(.5+py*factor)*height};}
  const vertex='attribute vec2 aPosition;varying vec2 vUv;void main(){vUv=aPosition*.5+.5;gl_Position=vec4(aPosition,0.,1.);}';
  const fragment=`precision highp float;
  varying vec2 vUv;uniform sampler2D uPage;uniform sampler2D uDisc0;uniform sampler2D uDisc1;uniform sampler2D uDisc2;
- uniform vec2 uViewport,uSource,uRow;uniform float uScroll,uRail,uTop;uniform vec4 uCards[3],uCovers[3],uTitles[3];uniform float uHover[3];
+ uniform vec2 uViewport,uSource,uRow;uniform float uScroll,uRail,uTop;uniform vec4 uCards[${cards.length}],uCovers[${cards.length}],uTitles[${cards.length}];uniform float uHover[${cards.length}];
  float box(vec2 p,vec2 size,float radius){vec2 q=abs(p)-size*.5+radius;return length(max(q,0.))+min(max(q.x,q.y),0.)-radius;}
  vec4 page(vec2 p){if(p.x<0.||p.y<0.||p.x>uSource.x||p.y>uSource.y)return vec4(.98,.98,.98,1.);return texture2D(uPage,p/uSource);}
  void main(){
-  vec2 uv=vec2(vUv.x,1.-vUv.y),p=uv-.5;float r=length(p);uv=.5+p*(1.+.16*r*r*r)*(1.-.3655*.16);
+  vec2 uv=vec2(vUv.x,1.-vUv.y),p=uv-.5;float aspect=uViewport.x/uViewport.y;p*=vec2(aspect,1.);float r=length(p);p*=1.+.24*r*r;uv=.5+p/vec2(aspect,1.);
   vec2 doc=vec2(uv.x*uViewport.x,uv.y*uViewport.y+uScroll-uTop);
   if(doc.y>=uRow.x&&doc.y<=uRow.y)doc.x+=uRail;
   vec4 color=page(doc);
-  for(int i=0;i<3;i++){
+  for(int i=0;i<${cards.length};i++){
    float h=uHover[i];vec4 card=uCards[i],cover=uCovers[i],title=uTitles[i];
    if(h>.001){
     float diameter=card.z*.62;vec2 center=vec2(card.x+card.z*.5,card.y+diameter*(.68-.40*h));
     vec2 q=(doc-center)/diameter;float angle=mix(-.2094395,.1396263,h),c=cos(angle),s=sin(angle);q=mat2(c,-s,s,c)*q+vec2(.5);
-    if(doc.y<card.y+1.&&q.x>=0.&&q.y>=0.&&q.x<=1.&&q.y<=1.){vec4 cd;if(i==0)cd=texture2D(uDisc0,q);else if(i==1)cd=texture2D(uDisc1,q);else cd=texture2D(uDisc2,q);color=mix(color,vec4(cd.rgb,1.),cd.a*h);}
+    if(doc.y<card.y+1.&&q.x>=0.&&q.y>=0.&&q.x<=1.&&q.y<=1.){vec4 cd;if(i%3==0)cd=texture2D(uDisc0,q);else if(i%3==1)cd=texture2D(uDisc1,q);else cd=texture2D(uDisc2,q);color=mix(color,vec4(cd.rgb,1.),cd.a*h);}
     vec2 local=doc-(cover.xy+cover.zw*.5);float distance=box(local,cover.zw,18.);
     if(distance<0.){float scale=mix(1.,.968,h);vec2 point=local/scale;if(box(point,cover.zw,18.)<0.)color=page(cover.xy+cover.zw*.5+point);else color=vec4(1.);}
     vec3 pink=mix(vec3(1.,.5098,.8588),vec3(.8039,0.,.6078),clamp((local.x+local.y)/max(cover.z,1.)+.5,0.,1.));
@@ -39,6 +39,7 @@
     if(doc.x>=title.x&&doc.y>=title.y&&doc.x<=title.x+title.z&&doc.y<=title.y+title.w){float ink=1.-smoothstep(.35,.9,dot(color.rgb,vec3(.3333)));color.rgb=mix(color.rgb,vec3(.8039,0.,.6078),ink*h);}
    }
   }
+  float edge=smoothstep(.08,.68,r);float fringe=edge*.55;vec4 red=page(doc+vec2(fringe,0.));vec4 blue=page(doc-vec2(fringe,0.));color.rgb=vec3(red.r,color.g,blue.b);float grain=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5;color.rgb+=grain*.009;
   gl_FragColor=color;
  }`;
  let program,uniforms={};
@@ -79,7 +80,7 @@
    surface.dataset.crtTexture=image.width+'x'+image.height;texture(0,image);sourceWidth=captureWidth;sourceHeight=captureHeight;
    cardBoxes=cards.map(rect);coverBoxes=cards.map(card=>rect(card.querySelector('.work-visual')));titleBoxes=cards.map(card=>rect(card.querySelector('h3')));
    const railBox=rail.getBoundingClientRect();row=[railBox.top+scrollY-surfaceTop,railBox.bottom+scrollY-surfaceTop];
-   ready=true;surface.dataset.crtStatus='ready';surface.dataset.crtCurvature='.16';surface.dataset.crtRenderer='webgl';draw(performance.now());root.classList.add('crt-enabled');wake();
+   ready=true;surface.dataset.crtStatus='ready';surface.dataset.crtCurvature=String(CURVE);surface.dataset.crtRenderer='webgl';draw(performance.now());root.classList.add('crt-enabled');wake();
   }catch(error){root.classList.remove('crt-enabled');ready=false;surface.dataset.crtStatus='fallback';console.warn('Curved display unavailable:',error.message);}
   finally{capturing=false;if(pending){pending=false;scheduleCapture();}}
  }
@@ -88,7 +89,7 @@
   if(!ready||document.hidden)return false;
   const scroll=position(),elapsed=Math.min(50,lastTime?time-lastTime:16);lastTime=time;
   const point=pointer?unwarp(pointer.x,pointer.y):null;let active=false;
-  for(let i=0;i<3;i++){
+  for(let i=0;i<cards.length;i++){
    const box=cardBoxes[i],docY=point?point.y+scroll.y-surfaceTop:-1,docX=point?point.x+scroll.x:-1;
    const target=point&&docX>=box[0]&&docX<=box[0]+box[2]&&docY>=box[1]&&docY<=box[1]+box[3]?1:0;
    hover[i]+=(target-hover[i])*(1-Math.exp(-elapsed/125));if(Math.abs(target-hover[i])<.002)hover[i]=target;else active=true;
