@@ -175,22 +175,26 @@ test('GPU showcase follows the reference radial curve with mipmapped sampling an
  assert.match(showcaseGpuSource,/dataset\.crtShowcaseGpuInitialized/);
 });
 
-test('GPU showcase paint matches the light page palette instead of the retired black card palette',()=>{
- assert.match(showcaseGpuSource,/ctx\.fillStyle='#ffffff';ctx\.fill\(\);ctx\.clip\(\)/);
+test('GPU showcase paints dark card shells with legible light metadata',()=>{
+ assert.match(showcaseGpuSource,/ctx\.fillStyle='#151515';ctx\.fill\(\);ctx\.clip\(\)/);
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(text\.toUpperCase\(\)/);
- assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(title\.innerText/);
- assert.doesNotMatch(showcaseGpuSource,/ctx\.fillStyle='#090909'/);
+ assert.match(showcaseGpuSource,/ctx\.fillStyle='#f5f5f5';ctx\.fillText\(title\.innerText/);
+ assert.match(showcaseGpuSource,/drawImage\(hoverVideo,v\)/);
 });
 
-test('showcase player removes the highlights strip and provides controlled muted previews with failure feedback',()=>{
+test('showcase plays previews inside the hovered thumbnail and keeps the controlled modal player',()=>{
  const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
  assert.doesNotMatch(html,/class="quick-facts/);
  for(const id of ['preview-video','preview-play','preview-seek','preview-mute','preview-volume','preview-fullscreen','preview-status'])assert.match(html,new RegExp(`id="${id}"`));
  assert.match(html,/href="player\.css"/);
+ assert.match(appSource,/event\.target\.closest\('\.work-visual'\)/);
  assert.match(appSource,/stopHoverPreviews\(card\)/);
  assert.match(appSource,/media\.muted=true/);
  assert.match(appSource,/previewVideo\.onerror=showMediaError/);
  assert.match(appSource,/addEventListener\('input'/);
  assert.match(appSource,/No video file attached/);
- assert.match(showcaseGpuSource,/paintMiniPlayer/);
+ assert.doesNotMatch(appSource,/class="mini-player"/);
+ assert.doesNotMatch(showcaseGpuSource,/paintMiniPlayer/);
+ assert.match(showcaseGpuSource,/STORYBOARD · MUTED/);
+ assert.match(showcaseGpuSource,/VIDEO UNAVAILABLE/);
 });
