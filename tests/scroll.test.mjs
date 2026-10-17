@@ -153,6 +153,17 @@ test('reduced motion changes layout without bounce animation',()=>{
  assert.equal(app.cards[0].animations.length,0);
 });
 
+test('featured rail exposes five cards while grid mode keeps the full concept set',()=>{
+ const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../dist/showcase-view.css',import.meta.url),'utf8');
+ const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+ assert.match(html,/data-showcase-view="cards"[^>]*>5 featured<\/button>/);
+ assert.match(html,/data-showcase-view="grid"[^>]*>All concepts<\/button>/);
+ assert.match(css,/\.showcase-grid\[data-view="cards"\] \.work-card:nth-child\(n\+6\)\{display:none\}/);
+ assert.match(app,/function activeCarouselCards\(\)\{return showcaseView==='grid'\?carouselCards:carouselCards\.slice\(0,5\);\}/);
+ assert.match(app,/carouselLimit=showcaseView==='grid'\?0:Math\.max\(0,last\.offsetLeft\+last\.offsetWidth\+gutter-grid\.clientWidth\)/);
+});
+
 test('layout measurements ignore animated card bounds and transformed scroll overflow',()=>{
  const app=boot(),pin=app.evaluate('carouselPinY');
  app.evaluate('setShowcaseView("grid");setShowcaseView("cards")');

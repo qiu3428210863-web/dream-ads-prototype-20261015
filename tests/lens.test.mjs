@@ -198,9 +198,10 @@ test('showcase keeps a 1.5x supersampled source canvas while bounding memory and
  assert.ok(textureBound.sourceRatio<=2048/1920);assert.ok(textureBound.outputRatio<=2048/1920);
 });
 
-test('GPU showcase requests mipmaps, anisotropic filtering, and high-quality Canvas2D text and image sampling',()=>{
- assert.match(showcaseGpuSource,/gl\.generateMipmap\(gl\.TEXTURE_2D\)/);
- assert.match(showcaseGpuSource,/gl\.texSubImage2D\(gl\.TEXTURE_2D,0,0,0,gl\.RGBA,gl\.UNSIGNED_BYTE,scene\)/);
+test('GPU showcase defers full mipmap generation until the high-resolution scene settles',()=>{
+ assert.match(showcaseGpuSource,/gl\.texParameteri\(gl\.TEXTURE_2D,gl\.TEXTURE_MIN_FILTER,gl\.LINEAR\);\s*gl\.texSubImage2D\(gl\.TEXTURE_2D,0,0,0,gl\.RGBA,gl\.UNSIGNED_BYTE,scene\)/);
+ assert.match(showcaseGpuSource,/setTimeout\(\(\)=>\{mipmapTimer=0;[\s\S]*?gl\.generateMipmap\(gl\.TEXTURE_2D\);[\s\S]*?gl\.LINEAR_MIPMAP_LINEAR[\s\S]*?\},140\)/);
+ assert.match(showcaseGpuSource,/scheduleMipmaps\(\)/);
  assert.match(showcaseGpuSource,/textureWidth!==sw\|\|textureHeight!==sh\).*gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA8,sw,sh,0,gl\.RGBA,gl\.UNSIGNED_BYTE,null\)/);
  assert.match(showcaseGpuSource,/EXT_texture_filter_anisotropic/);
  assert.match(showcaseGpuSource,/TEXTURE_MAX_ANISOTROPY_EXT/);
