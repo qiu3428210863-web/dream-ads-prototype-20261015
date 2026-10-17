@@ -18,7 +18,7 @@ const previousConcept=$('#carousel-prev'),nextConcept=$('#carousel-next');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
 let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,showcaseDock=null;
-let showcaseView='cards',viewAnimations=[];
+let showcaseView='cards',viewAnimations=[],railReentry=false;
 const viewButtons=$$('[data-showcase-view]');
 function updateCarousel(){
  const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
@@ -28,9 +28,13 @@ function updateCarousel(){
  if(nextConcept.disabled!==atEnd)nextConcept.disabled=atEnd;
 }
 function measureCarousel(){
- carouselStep=carouselCards[1].offsetLeft-carouselCards[0].offsetLeft;carouselLimit=showcaseView==='grid'?0:Math.max(0,grid.scrollWidth-grid.clientWidth);
- const card=carouselCards[0].getBoundingClientRect(),header=$('.header').getBoundingClientRect();
- carouselPinY=Math.max(0,card.top+scrollY+card.height*.5-(innerHeight+header.height)*.5);
+ const first=carouselCards[0],last=carouselCards[carouselCards.length-1];
+ const gutter=parseFloat(getComputedStyle(grid).paddingRight)||0;
+ // FLIP transforms affect bounding rectangles and scrollWidth, but not layout offsets.
+ carouselStep=carouselCards[1].offsetLeft-first.offsetLeft;
+ carouselLimit=showcaseView==='grid'?0:Math.max(0,last.offsetLeft+last.offsetWidth+gutter-grid.clientWidth);
+ const rail=grid.getBoundingClientRect(),header=$('.header').getBoundingClientRect();
+ carouselPinY=Math.max(0,rail.top+scrollY+first.offsetTop+first.offsetHeight*.5-(innerHeight+header.height)*.5);
  updateCarousel();
 }
 // The same engine and damping model as shader.se; one clock drives both axes.
@@ -67,7 +71,7 @@ function setShowcaseView(view){
  showcaseDock=null;pageScroll.scrollTo(pageScroll.animatedScroll,{immediate:true});
  if(drag&&grid.hasPointerCapture(drag.id))grid.releasePointerCapture(drag.id);
  drag=null;grid.classList.remove('is-dragging');
- railScroll.scrollTo(0,{immediate:true});showcaseView=view;grid.dataset.view=view;
+ railScroll.scrollTo(0,{immediate:true});showcaseView=view;grid.dataset.view=view;railReentry=view==='cards';
  grid.setAttribute('aria-label',view==='grid'?'Concept gallery, grid view':'Concept gallery, horizontal card view');
  viewButtons.forEach(button=>{
   button.setAttribute('aria-pressed',String(button.dataset.showcaseView===view));
@@ -80,11 +84,14 @@ function setShowcaseView(view){
    const from=before[index],to=card.getBoundingClientRect();
    return card.animate([
     {transform:`translate(${from.left-to.left}px,${from.top-to.top}px) scale(${from.width/to.width},${from.height/to.height})`,offset:0},
-    {transform:'translate(0,0) scale(.78)',offset:.55},
-    {transform:'translate(0,0) scale(1.045)',offset:.8},
     {transform:'translate(0,0) scale(1)',offset:1}
-   ],{duration:660,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
+   ],{duration:1160,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
   });
+  const batch=viewAnimations;let remaining=batch.length;
+  batch.forEach(animation=>{animation.onfinish=()=>{
+   if(viewAnimations!==batch||--remaining!==0)return;
+   viewAnimations=[];railScroll.resize();pageScroll.resize();measureCarousel();resumeScrollClock();
+  };});
  }
  resumeScrollClock();
 }
@@ -103,7 +110,14 @@ addEventListener('wheel',event=>{
   else showcaseDock.pending+=delta*(horizontal?1:1.25);
   return;
  }
+ if(centered)railReentry=false;
  if(!centered){
+  // A view change can leave the page beyond the rail's new center. Re-enter smoothly.
+  const x=railScroll.targetScroll,canMove=deltaY>0?x<carouselLimit-1:x>1;
+  if(railReentry&&!horizontal&&grid.contains(event.target)&&canMove){
+   event.preventDefault();event.stopImmediatePropagation();railReentry=false;
+   beginShowcaseDock(Math.sign(deltaY),deltaY*1.25);return;
+  }
   if(horizontal&&grid.contains(event.target)){event.preventDefault();event.stopImmediatePropagation();scrollCarouselTo(railScroll.targetScroll+deltaX);}
   else if(!horizontal){
    const target=pageScroll.targetScroll+deltaY,x=railScroll.targetScroll;
