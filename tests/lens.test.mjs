@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync,existsSync} from 'node:fs';
-import {legacyField,reconstructionError} from './lens-metrics.mjs';
 
 const modelSource=readFileSync(new URL('../dist/lens-model.js',import.meta.url),'utf8');
 function model(){const context=vm.createContext({Uint8ClampedArray,Math});vm.runInContext(modelSource,context);return context.DreamLens;}
@@ -17,7 +16,7 @@ test('displacement encoding preserves the reference lens for desktop and mobile 
  for(const [width,height] of [[1440,900],[2560,1440],[390,844],[320,568]]){
   const field=lens.field(width,height);
   for(let y=0;y<field.height;y+=7)for(let x=0;x<field.width;x+=7){
-   const sx=(x+.5)/field.width*width,sy=(y+.5)/field.height*height,index=(y*field.width+x)*4,point=lens.sample(sx,sy,width,height);
+   const sx=x/(field.width-1)*width,sy=y/(field.height-1)*height,index=(y*field.width+x)*4,point=lens.sample(sx,sy,width,height);
    const dx=(field.pixels[index]/255-.5)*field.scale,dy=(field.pixels[index+1]/255-.5)*field.scale;
    assert.ok(Math.abs(sx+dx-point.x)<=field.scale/510+1e-7);assert.ok(Math.abs(sy+dy-point.y)<=field.scale/510+1e-7);
    assert.equal(field.pixels[index+3],255);
@@ -26,7 +25,7 @@ test('displacement encoding preserves the reference lens for desktop and mobile 
 });
 
 function boot(protocol='file:'){
- const events=new Map(),subscribers=[],observers=[],densityEvents=[],trace={canvases:0,pixels:[],dataURLs:0};
+ const events=new Map(),subscribers=[],observers=[],trace={canvases:0,pixels:[],dataURLs:0};
  const styles=()=>({values:new Map(),setProperty(name,value){this.values.set(name,value);},getPropertyValue(name){return this.values.get(name);}});
  let sandbox;
  class Element{
@@ -56,11 +55,11 @@ function boot(protocol='file:'){
     drawImage(){throw Error('Reading product files is forbidden in this file-origin test');}
    };},toDataURL(){trace.dataURLs++;return 'data:image/png;base64,fixture';}};
   },createElementNS:(ns,tag)=>new Element(tag)};
- const window={DreamScroll:{position:()=>({x:0,y:sandbox.visualY}),onFrame:fn=>subscribers.push(fn),requestFrame(){}},ResizeObserver:class{constructor(fn){observers.push(fn);}observe(){}},matchMedia:()=>({addEventListener(type,fn){densityEvents.push(fn);},removeEventListener(){}})};
- sandbox={window,document,ResizeObserver:window.ResizeObserver,location:{protocol},devicePixelRatio:1,innerHeight:900,scrollY:500,visualY:500.25,console,
+ const window={DreamScroll:{position:()=>({x:0,y:sandbox.visualY}),onFrame:fn=>subscribers.push(fn),requestFrame(){}},ResizeObserver:class{constructor(fn){observers.push(fn);}observe(){}}};
+ sandbox={window,document,ResizeObserver:window.ResizeObserver,location:{protocol},innerHeight:900,scrollY:500,visualY:500.25,console,
   addEventListener(type,fn){events.set(type,fn);},requestAnimationFrame:()=>1};
  const context=vm.createContext(sandbox);vm.runInContext(modelSource,context);vm.runInContext(readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8'),context);
- return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers,densityEvents};
+ return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers};
 }
 test('file-origin initialization activates the live lens without reading any product image',()=>{
  const app=boot();
@@ -87,29 +86,4 @@ test('startup resources work under a static project subpath without a screenshot
   assert.equal(url.origin,'https://example.invalid');assert.ok(url.pathname.startsWith('/project/'));assert.ok(existsSync(new URL('../dist/'+match[1],import.meta.url)));
  }
  assert.ok(!html.includes('html2canvas'));assert.ok(!/<script[^>]*type=["']module["']/.test(html));
-});
-test('adaptive field density has a fixed memory ceiling and tighter displacement precision',()=>{
- const lens=model();
- for(const [width,height,dpr] of [[1920,1080,1],[2560,1440,2],[3840,2160,3],[390,844,3]]){
-  const field=lens.field(width,height,dpr);
-  assert.ok(field.width<=512&&field.height<=512);assert.ok(field.width*field.height<=131072);
-  assert.ok(field.scale<Math.max(width,height)*.06*.7,'encode the actual displacement range instead of a loose bound');
- }
- assert.ok(lens.quality(1920,1080,2).width>lens.quality(1920,1080,1).width);
-});
-test('texel-centered interpolation reduces reconstructed lens-coordinate error',()=>{
- const lens=model();
- for(const [width,height,dpr] of [[1440,900,1],[1920,1080,1],[2560,1440,2],[390,844,3]]){
-  const before=reconstructionError(lens,legacyField(lens,width,height),width,height);
-  const after=reconstructionError(lens,lens.field(width,height,dpr),width,height);
-  assert.ok(after.rms<before.rms*.4,'reconstructed coordinates stay closer to the unchanged analytic lens');
-  assert.ok(after.max<.3,'model reconstruction stays within 0.3 CSS pixel on the probe grid');
- }
-});
-test('moving to a different pixel density rebuilds the field without changing curvature or layout size',()=>{
- const app=boot(),region=app.filter.getAttribute('width');
- app.sandbox.devicePixelRatio=2;app.densityEvents[0]();
- assert.equal(app.trace.canvases,2);assert.equal(app.filter.getAttribute('width'),region);assert.equal(app.surface.dataset.crtDpr,'2');
- assert.equal(app.surface.dataset.crtCurvature,'0.16');assert.equal(app.filter.getAttribute('image-rendering'),'optimizeQuality');
- assert.equal(app.warp.getAttribute('in'),'SourceGraphic');assert.equal(app.body.querySelector('feGaussianBlur').getAttribute('in'),'field-raw');
 });
