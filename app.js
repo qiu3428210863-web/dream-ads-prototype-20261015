@@ -18,6 +18,8 @@ const previousConcept=$('#carousel-prev'),nextConcept=$('#carousel-next');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
 let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,showcaseDock=null;
+let showcaseView='cards',viewAnimations=[];
+const viewButtons=$$('[data-showcase-view]');
 function updateCarousel(){
  const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
  if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(carouselCards.length).padStart(2,'0');lastCarouselIndex=index;}
@@ -26,7 +28,7 @@ function updateCarousel(){
  if(nextConcept.disabled!==atEnd)nextConcept.disabled=atEnd;
 }
 function measureCarousel(){
- carouselStep=carouselCards[1].offsetLeft-carouselCards[0].offsetLeft;carouselLimit=Math.max(0,grid.scrollWidth-grid.clientWidth);
+ carouselStep=carouselCards[1].offsetLeft-carouselCards[0].offsetLeft;carouselLimit=showcaseView==='grid'?0:Math.max(0,grid.scrollWidth-grid.clientWidth);
  const card=carouselCards[0].getBoundingClientRect(),header=$('.header').getBoundingClientRect();
  carouselPinY=Math.max(0,card.top+scrollY+card.height*.5-(innerHeight+header.height)*.5);
  updateCarousel();
@@ -34,7 +36,7 @@ function measureCarousel(){
 // The same engine and damping model as shader.se; one clock drives both axes.
 const pageScroll=new Lenis({autoRaf:false,lerp:.1,smoothWheel:true,syncTouch:false,anchors:{onStart:()=>{showcaseDock=null;resumeScrollClock();}},stopInertiaOnNavigate:true,prevent:element=>element.tagName==='DIALOG'||element.tagName==='TEXTAREA'||element.isContentEditable});
 // A single capture listener routes wheel input; the nested Lenis must not consume it again.
-const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'horizontal',lerp:.12,smoothWheel:true,syncTouch:false,overscroll:true,virtualScroll:({event})=>!event.type.includes('wheel')});
+const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'horizontal',lerp:.12,smoothWheel:true,syncTouch:false,overscroll:true,virtualScroll:({event})=>showcaseView!=='grid'&&!event.type.includes('wheel')});
 const scrollFrameSubscribers=new Set();
 window.DreamScroll={onFrame(callback){scrollFrameSubscribers.add(callback);return()=>scrollFrameSubscribers.delete(callback);},requestFrame:resumeScrollClock,position(){return{x:railScroll.animatedScroll,y:pageScroll.animatedScroll};},scrollTo(y){showcaseDock=null;pageScroll.scrollTo(y);resumeScrollClock();}};
 let scrollFrame=0;
@@ -57,9 +59,39 @@ function beginShowcaseDock(direction,pending=0){
   if(phase.pending)scrollCarouselTo(railScroll.targetScroll+phase.pending);
  }});resumeScrollClock();
 }
+// FLIP animates the existing sleeves; covers, CD hover and preview listeners stay intact.
+function setShowcaseView(view){
+ if(!['cards','grid'].includes(view)||view===showcaseView)return;
+ const before=carouselCards.map(card=>card.getBoundingClientRect());
+ viewAnimations.forEach(animation=>animation.cancel());viewAnimations=[];
+ showcaseDock=null;pageScroll.scrollTo(pageScroll.animatedScroll,{immediate:true});
+ if(drag&&grid.hasPointerCapture(drag.id))grid.releasePointerCapture(drag.id);
+ drag=null;grid.classList.remove('is-dragging');
+ railScroll.scrollTo(0,{immediate:true});showcaseView=view;grid.dataset.view=view;
+ grid.setAttribute('aria-label',view==='grid'?'Concept gallery, grid view':'Concept gallery, horizontal card view');
+ viewButtons.forEach(button=>{
+  button.setAttribute('aria-pressed',String(button.dataset.showcaseView===view));
+  button.parentElement.dataset.view=view;
+ });
+ carouselCards.forEach(card=>card.setAttribute('aria-roledescription',view==='grid'?'card':'slide'));
+ railScroll.resize();pageScroll.resize();measureCarousel();
+ if(!reducedCarouselMotion.matches){
+  viewAnimations=carouselCards.map((card,index)=>{
+   const from=before[index],to=card.getBoundingClientRect();
+   return card.animate([
+    {transform:`translate(${from.left-to.left}px,${from.top-to.top}px) scale(${from.width/to.width},${from.height/to.height})`,offset:0},
+    {transform:'translate(0,0) scale(.78)',offset:.55},
+    {transform:'translate(0,0) scale(1.045)',offset:.8},
+    {transform:'translate(0,0) scale(1)',offset:1}
+   ],{duration:660,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
+  });
+ }
+ resumeScrollClock();
+}
+viewButtons.forEach(button=>button.addEventListener('click',()=>setShowcaseView(button.dataset.showcaseView)));
 // Enter the horizontal sequence only when the cards reach the viewport's center.
 addEventListener('wheel',event=>{
- if(event.ctrlKey||!carouselLimit||document.body.classList.contains('modal-open'))return;
+ if(showcaseView==='grid'||event.ctrlKey||!carouselLimit||document.body.classList.contains('modal-open'))return;
  const unit=event.deltaMode===1?100/6:event.deltaMode===2?innerHeight:1;
  const deltaX=event.deltaX*unit,deltaY=event.deltaY*unit;
  const delta=Math.abs(deltaX)>Math.abs(deltaY)?deltaX:deltaY;
@@ -94,6 +126,7 @@ function moveCarousel(direction){scrollCarouselTo(railScroll.targetScroll+direct
 previousConcept.addEventListener('click',()=>moveCarousel(-1));nextConcept.addEventListener('click',()=>moveCarousel(1));
 railScroll.on('scroll',updateCarousel);
 grid.addEventListener('keydown',event=>{
+ if(showcaseView==='grid')return;
  if(event.key==='ArrowRight'){event.preventDefault();moveCarousel(1);}
  else if(event.key==='ArrowLeft'){event.preventDefault();moveCarousel(-1);}
  else if(event.key==='Home'){event.preventDefault();scrollCarouselTo(0);}
@@ -102,7 +135,7 @@ grid.addEventListener('keydown',event=>{
 // Keep a float target in Lenis rather than reading rounded DOM scrollLeft back.
 let drag=null,suppressClickUntil=0;
 grid.addEventListener('pointerdown',event=>{
- if(event.pointerType!=='mouse'||event.button!==0)return;
+ if(showcaseView==='grid'||event.pointerType!=='mouse'||event.button!==0)return;
  railScroll.scrollTo(grid.scrollLeft,{immediate:true});
  drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:grid.scrollLeft,lastX:event.clientX,lastTime:event.timeStamp,velocity:0,active:false};
 });
@@ -128,6 +161,7 @@ grid.addEventListener('pointerup',finishCarouselDrag);grid.addEventListener('poi
 grid.addEventListener('lostpointercapture',()=>{drag=null;grid.classList.remove('is-dragging');});
 grid.addEventListener('click',event=>{if(performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
 grid.addEventListener('focusin',event=>{
+ if(showcaseView==='grid')return;
  const card=event.target.closest('.work-card');if(!card||!event.target.matches(':focus-visible'))return;
  const cardRect=card.getBoundingClientRect(),viewport=grid.getBoundingClientRect(),gutter=parseFloat(getComputedStyle(grid).paddingLeft);
  if(cardRect.left<viewport.left+gutter||cardRect.right>viewport.right-gutter)scrollCarouselTo(grid.scrollLeft+cardRect.left-viewport.left-gutter);
@@ -144,8 +178,6 @@ window.addEventListener('resize',()=>{if(window.innerWidth>1050)closeMenu();});
 let toastTimer;
 function toast(message){$('.toast').textContent=message;$('.toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('.toast').classList.remove('show'),3500);}
 function downloadFile(name,content,type='text/plain;charset=utf-8'){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-$('#download-button').addEventListener('click',()=>{downloadFile('dream-ads-creative-brief.txt',`DREAM ADS — CREATIVE BRIEF\n\nFictional campaign / Design exercise\n\nMake Your Dream Ad.\nPick a real or imaginary product. Imagine its next campaign. Bring it to life with OpenArt.\n\nWho: Designers, AI artists, content creators, and anyone with a big advertising idea.\nDeliverable: One original video ad of around 15 seconds made with OpenArt, plus an English creative concept of up to 100 words.\nDuration: 14 days from the opening of submissions. Exact dates will be announced.\nRewards: Three winners each receive $100 in OpenArt creative credits and a feature in the official community.\nJudging: Creative concept 40%; Product communication 30%; Visual quality 30%.\n\nAll activity details and rewards above are fictional. This demo does not submit entries to OpenArt.\n`);toast('Creative brief downloaded. Make it yours.');});
-$('#share-button').addEventListener('click',async()=>{const url=new URL(window.location.href);url.hash='showcase';try{if(navigator.share){await navigator.share({title:'Dream Ads — Make Your Dream Ad.',url:url.href});}else{await navigator.clipboard.writeText(url.href);toast('Challenge link copied.');}}catch(error){if(error.name!=='AbortError')toast('Copy the page URL from your address bar to share this challenge.');}});
 $('#judging-toggle').addEventListener('click',()=>{const button=$('#judging-toggle');const open=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(open));$('#judging-notes').hidden=!open;});
 const entryDialog=$('#entry-dialog');
 const form=$('#entry-form');
