@@ -1,1 +1,1 @@
-{"name":"dream-ads","version":"1.7.0","private":true,"description":"Dream Ads high-fidelity responsive creator challenge","scripts":{"start":"node server.mjs","check":"node --check dist/app.js && node --check dist/crt.js && node --check dist/scroll-diagnostics.js"}}
+{"name":"dream-ads","version":"1.8.0","private":true,"description":"Dream Ads high-fidelity responsive creator challenge","scripts":{"start":"node server.mjs","check":"node --check dist/app.js && node --check dist/crt.js && node --check dist/scroll-diagnostics.js"}}

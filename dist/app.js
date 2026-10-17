@@ -25,9 +25,11 @@ function updateCarousel(){
 function measureCarousel(){carouselStep=carouselCards[1].offsetLeft-carouselCards[0].offsetLeft;carouselLimit=Math.max(0,grid.scrollWidth-grid.clientWidth);updateCarousel();}
 // The same engine and damping model as shader.se; one clock drives both axes.
 const pageScroll=new Lenis({autoRaf:false,lerp:.1,smoothWheel:true,syncTouch:false,anchors:{onStart:resumeScrollClock},stopInertiaOnNavigate:true,prevent:element=>element.tagName==='DIALOG'||element.tagName==='TEXTAREA'||element.isContentEditable});
-const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'both',lerp:.1,smoothWheel:true,syncTouch:false,overscroll:true});
+const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'both',lerp:.1,smoothWheel:true,syncTouch:false,overscroll:true,virtualScroll:({deltaX,deltaY,event})=>{if(!event.type.includes('wheel')&&!event.type.includes('touch'))return true;const delta=Math.abs(deltaY)>=Math.abs(deltaX)?deltaY:deltaX,position=railScroll?.targetScroll??grid.scrollLeft,atStart=position<=1,atEnd=carouselLimit-position<=1;return !((delta<0&&atStart)||(delta>0&&atEnd));}});
+const scrollFrameSubscribers=new Set();
+window.DreamScroll={onFrame(callback){scrollFrameSubscribers.add(callback);return()=>scrollFrameSubscribers.delete(callback);},requestFrame:resumeScrollClock,position(){return{x:railScroll.animatedScroll,y:pageScroll.animatedScroll};}};
 let scrollFrame=0;
-function tickScroll(time){pageScroll.raf(time);railScroll.raf(time);scrollFrame=pageScroll.isScrolling==='smooth'||railScroll.isScrolling==='smooth'?requestAnimationFrame(tickScroll):0;}
+function tickScroll(time){pageScroll.raf(time);railScroll.raf(time);let visualActive=false;for(const callback of scrollFrameSubscribers)visualActive=callback(time)||visualActive;scrollFrame=visualActive||pageScroll.isScrolling==='smooth'||railScroll.isScrolling==='smooth'?requestAnimationFrame(tickScroll):0;}
 function resumeScrollClock(){if(!scrollFrame){pageScroll.time=railScroll.time=0;scrollFrame=requestAnimationFrame(tickScroll);}}
 addEventListener('wheel',resumeScrollClock,{passive:true});
 addEventListener('keydown',event=>{if(!event.defaultPrevented&&['PageUp','PageDown','Home','End','ArrowUp','ArrowDown',' '].includes(event.key)&&!event.target.closest('input,textarea,select,button,[contenteditable]'))pageScroll.scrollTo(scrollY,{immediate:true});});
