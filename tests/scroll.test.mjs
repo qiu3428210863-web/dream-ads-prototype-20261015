@@ -57,13 +57,14 @@ function boot(){
  }
  return {advance,wheel,evaluate,grid,win};
 }
+function arrive(app){app.wheel(app.evaluate('carouselPinY-pageScroll.animatedScroll'));app.advance(60);}
 
 test('vertical input remains vertical until the cards reach the center',()=>{
  const app=boot();app.wheel(100);app.advance(45);
  assert.equal(app.grid.scrollLeft,0);assert.ok(app.win.scrollY>650);assert.ok(app.win.scrollY<app.evaluate('carouselPinY'));
 });
 test('crossing the card center pins the page and accumulates horizontal wheel distance',()=>{
- const app=boot();app.wheel(400);app.advance(40);
+ const app=boot();arrive(app);
  const pin=app.evaluate('carouselPinY');assert.equal(app.win.scrollY,pin);
  app.wheel(120);app.advance(2);app.wheel(120);app.advance(2);
  assert.equal(app.evaluate('railScroll.targetScroll'),300);
@@ -71,18 +72,31 @@ test('crossing the card center pins the page and accumulates horizontal wheel di
  assert.ok(app.grid.scrollLeft>released,'rail continues moving after wheel input ends');assert.equal(app.win.scrollY,pin);
 });
 test('both boundaries hand outward wheel input back to the page',()=>{
- const app=boot();app.wheel(400);app.advance(40);
+ const app=boot();arrive(app);
  const pin=app.evaluate('carouselPinY');app.evaluate('scrollCarouselTo(carouselLimit,true)');
  app.wheel(120);app.advance(30);assert.ok(app.win.scrollY>pin);
  app.wheel(-500);app.advance(40);assert.equal(app.win.scrollY,pin);
  app.evaluate('scrollCarouselTo(0,true)');app.wheel(-120);app.advance(30);assert.ok(app.win.scrollY<pin);
 });
 test('outward horizontal touchpad input becomes vertical motion at the end',()=>{
- const app=boot();app.wheel(400);app.advance(40);app.evaluate('scrollCarouselTo(carouselLimit,true)');
+ const app=boot();arrive(app);app.evaluate('scrollCarouselTo(carouselLimit,true)');
  const y=app.win.scrollY;app.wheel(0,160);app.advance(20);assert.ok(app.win.scrollY>y);
 });
 test('line wheel units match pixel units and fractional touchpad deltas are retained',()=>{
- const app=boot();app.wheel(400);app.advance(40);app.wheel(3,0,1);
+ const app=boot();arrive(app);app.wheel(3,0,1);
  assert.equal(app.evaluate('railScroll.targetScroll'),62.5);
  app.wheel(.2);assert.equal(app.evaluate('railScroll.targetScroll'),62.75);
+});
+test('arrival decelerates over multiple frames and transfers excess distance after docking',()=>{
+ const app=boot(),start=app.win.scrollY,pin=app.evaluate('carouselPinY');app.wheel(400);
+ const positions=[];for(let i=0;i<42;i++){app.advance();positions.push(app.win.scrollY);}
+ assert.ok(positions[2]>start&&positions[2]<pin-20,'arrival does not jump to the pin');
+ assert.ok(positions.every(y=>y<=pin),'no vertical overshoot');
+ assert.ok(positions[6]-positions[5]>positions[30]-positions[29],'arrival velocity decreases');
+ assert.equal(app.win.scrollY,pin);assert.ok(app.grid.scrollLeft>0,'excess distance eases into the rail');
+});
+test('reversing during arrival cancels docking and does not leave an input lock',()=>{
+ const app=boot();app.wheel(400);app.advance(8);const y=app.win.scrollY;
+ app.wheel(-120);app.advance(50);
+ assert.ok(app.win.scrollY<y);assert.equal(app.grid.scrollLeft,0);assert.equal(app.evaluate('showcaseDock'),null);
 });

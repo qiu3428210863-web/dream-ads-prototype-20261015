@@ -17,7 +17,7 @@ renderConcepts();
 const previousConcept=$('#carousel-prev'),nextConcept=$('#carousel-next');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
-let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,pinWheelUntil=0;
+let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,showcaseDock=null;
 function updateCarousel(){
  const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
  if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(carouselCards.length).padStart(2,'0');lastCarouselIndex=index;}
@@ -32,37 +32,53 @@ function measureCarousel(){
  updateCarousel();
 }
 // The same engine and damping model as shader.se; one clock drives both axes.
-const pageScroll=new Lenis({autoRaf:false,lerp:.1,smoothWheel:true,syncTouch:false,anchors:{onStart:()=>{pinWheelUntil=0;resumeScrollClock();}},stopInertiaOnNavigate:true,prevent:element=>element.tagName==='DIALOG'||element.tagName==='TEXTAREA'||element.isContentEditable});
+const pageScroll=new Lenis({autoRaf:false,lerp:.1,smoothWheel:true,syncTouch:false,anchors:{onStart:()=>{showcaseDock=null;resumeScrollClock();}},stopInertiaOnNavigate:true,prevent:element=>element.tagName==='DIALOG'||element.tagName==='TEXTAREA'||element.isContentEditable});
 // A single capture listener routes wheel input; the nested Lenis must not consume it again.
 const railScroll=new Lenis({wrapper:grid,content:grid,autoRaf:false,orientation:'horizontal',gestureOrientation:'horizontal',lerp:.12,smoothWheel:true,syncTouch:false,overscroll:true,virtualScroll:({event})=>!event.type.includes('wheel')});
 const scrollFrameSubscribers=new Set();
-window.DreamScroll={onFrame(callback){scrollFrameSubscribers.add(callback);return()=>scrollFrameSubscribers.delete(callback);},requestFrame:resumeScrollClock,position(){return{x:railScroll.animatedScroll,y:pageScroll.animatedScroll};}};
+window.DreamScroll={onFrame(callback){scrollFrameSubscribers.add(callback);return()=>scrollFrameSubscribers.delete(callback);},requestFrame:resumeScrollClock,position(){return{x:railScroll.animatedScroll,y:pageScroll.animatedScroll};},scrollTo(y){showcaseDock=null;pageScroll.scrollTo(y);resumeScrollClock();}};
 let scrollFrame=0;
 function tickScroll(time){
- const previousY=pageScroll.animatedScroll;pageScroll.raf(time);
- if(time<pinWheelUntil&&carouselLimit>1){
-  const y=pageScroll.animatedScroll,x=railScroll.targetScroll;
-  if((previousY<carouselPinY&&y>=carouselPinY&&x<carouselLimit-1)||(previousY>carouselPinY&&y<=carouselPinY&&x>1))pageScroll.scrollTo(carouselPinY,{immediate:true});
- }
+ pageScroll.raf(time);
  railScroll.raf(time);let visualActive=false;for(const callback of scrollFrameSubscribers)visualActive=callback(time)||visualActive;
  scrollFrame=visualActive||pageScroll.isScrolling==='smooth'||railScroll.isScrolling==='smooth'?requestAnimationFrame(tickScroll):0;
 }
 function resumeScrollClock(){if(!scrollFrame){pageScroll.time=railScroll.time=0;scrollFrame=requestAnimationFrame(tickScroll);}}
 addEventListener('wheel',resumeScrollClock,{passive:true});
-addEventListener('keydown',event=>{if(!event.defaultPrevented&&['PageUp','PageDown','Home','End','ArrowUp','ArrowDown',' '].includes(event.key)&&!event.target.closest('input,textarea,select,button,[contenteditable]'))pageScroll.scrollTo(scrollY,{immediate:true});});
+addEventListener('keydown',event=>{if(!event.defaultPrevented&&['PageUp','PageDown','Home','End','ArrowUp','ArrowDown',' '].includes(event.key)&&!event.target.closest('input,textarea,select,button,[contenteditable]')){showcaseDock=null;pageScroll.scrollTo(scrollY,{immediate:true});}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(scrollFrame);scrollFrame=0;}else resumeScrollClock();});
 function scrollCarouselTo(value,immediate=false){railScroll.scrollTo(Math.max(0,Math.min(carouselLimit,value)),{programmatic:false,lerp:.12,immediate:immediate||reducedCarouselMotion.matches});resumeScrollClock();}
+function beginShowcaseDock(direction,pending=0){
+ const phase={direction,pending};showcaseDock=phase;
+ const distance=Math.abs(carouselPinY-pageScroll.animatedScroll),speed=Math.max(500,Math.abs(pageScroll.velocity)*60);
+ const duration=Math.max(.28,Math.min(.6,3*distance/speed));
+ pageScroll.scrollTo(carouselPinY,{duration,easing:t=>1-(1-t)**3,onComplete:()=>{
+  if(showcaseDock!==phase)return;showcaseDock=null;
+  if(phase.pending)scrollCarouselTo(railScroll.targetScroll+phase.pending);
+ }});resumeScrollClock();
+}
 // Enter the horizontal sequence only when the cards reach the viewport's center.
 addEventListener('wheel',event=>{
  if(event.ctrlKey||!carouselLimit||document.body.classList.contains('modal-open'))return;
- pinWheelUntil=performance.now()+1000;
  const unit=event.deltaMode===1?100/6:event.deltaMode===2?innerHeight:1;
  const deltaX=event.deltaX*unit,deltaY=event.deltaY*unit;
  const delta=Math.abs(deltaX)>Math.abs(deltaY)?deltaX:deltaY;
  if(delta===0)return;
- const horizontal=Math.abs(deltaX)>Math.abs(deltaY),centered=Math.abs(pageScroll.animatedScroll-carouselPinY)<=1.5;
+ const horizontal=Math.abs(deltaX)>Math.abs(deltaY),y=pageScroll.animatedScroll,centered=Math.abs(y-carouselPinY)<=.75;
+ if(showcaseDock){
+  event.preventDefault();event.stopImmediatePropagation();
+  if(!horizontal&&deltaY*showcaseDock.direction<0){showcaseDock=null;pageScroll.scrollTo(y+deltaY,{programmatic:false,lerp:.1});resumeScrollClock();}
+  else showcaseDock.pending+=delta*(horizontal?1:1.25);
+  return;
+ }
  if(!centered){
   if(horizontal&&grid.contains(event.target)){event.preventDefault();event.stopImmediatePropagation();scrollCarouselTo(railScroll.targetScroll+deltaX);}
+  else if(!horizontal){
+   const target=pageScroll.targetScroll+deltaY,x=railScroll.targetScroll;
+   if((deltaY>0&&y<carouselPinY&&target>=carouselPinY&&x<carouselLimit-1)||(deltaY<0&&y>carouselPinY&&target<=carouselPinY&&x>1)){
+    event.preventDefault();event.stopImmediatePropagation();beginShowcaseDock(Math.sign(deltaY),(target-carouselPinY)*1.25);
+   }
+  }
   return;
  }
  const position=railScroll.targetScroll,atStart=position<=1,atEnd=carouselLimit-position<=1;
@@ -71,8 +87,8 @@ addEventListener('wheel',event=>{
   return;
  }
  event.preventDefault();event.stopImmediatePropagation();
- if(pageScroll.isScrolling)pageScroll.scrollTo(carouselPinY,{immediate:true});
- scrollCarouselTo(position+delta*(horizontal?1:1.25));
+ if(pageScroll.isScrolling)beginShowcaseDock(Math.sign(delta),delta*(horizontal?1:1.25));
+ else scrollCarouselTo(position+delta*(horizontal?1:1.25));
 },{capture:true,passive:false});
 function moveCarousel(direction){scrollCarouselTo(railScroll.targetScroll+direction*carouselStep);}
 previousConcept.addEventListener('click',()=>moveCarousel(-1));nextConcept.addEventListener('click',()=>moveCarousel(1));
@@ -117,7 +133,7 @@ grid.addEventListener('focusin',event=>{
  if(cardRect.left<viewport.left+gutter||cardRect.right>viewport.right-gutter)scrollCarouselTo(grid.scrollLeft+cardRect.left-viewport.left-gutter);
 });
 new ResizeObserver(measureCarousel).observe(grid);measureCarousel();
-new MutationObserver(()=>{const blocked=document.body.classList.contains('modal-open');if(blocked){pageScroll.stop();railScroll.stop();}else{pageScroll.start();railScroll.start();}}).observe(document.body,{attributes:true,attributeFilter:['class']});
+new MutationObserver(()=>{const blocked=document.body.classList.contains('modal-open');if(blocked){showcaseDock=null;pageScroll.stop();railScroll.stop();}else{pageScroll.start();railScroll.start();}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const menuButton = $('.menu-toggle');
 const mobileNav = $('#mobile-nav');
 function closeMenu(){menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Open menu');mobileNav.hidden=true;}

@@ -1,66 +1,32 @@
-/* WebGL supplies radial glass refraction; this fixed layer adds only subtle edge falloff. */
-:root {
-  --crt-vignette: .22;
+/* Real DOM through a screen-sized lens. The header and native dialogs remain outside. */
+:root{--crt-vignette:.22}
+.crt-filter-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.crt-spacer{display:block;width:1px;pointer-events:none}
+.crt-viewport{
+ position:fixed;inset:0;z-index:10;width:100%;height:100%;
+ overflow:clip;contain:strict;isolation:isolate;
 }
-.crt-filter-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  pointer-events: none;
+html.crt-enabled .crt-viewport{filter:url(#crt-lens)}
+.crt-surface{
+ display:flow-root;width:100%;isolation:isolate;background:#fafafa;
+ transform:translate3d(0,var(--crt-offset-y,0px),0);transform-origin:0 0;
+ opacity:1;filter:none;
 }
-.crt-surface {
-  display: flow-root;
-  isolation: isolate;
-  background: #f8f8f7;
+.header{z-index:60;background:#fff;backdrop-filter:none}
+.crt-glass{position:fixed;inset:0;z-index:45;pointer-events:none;user-select:none;overflow:hidden;contain:strict}
+.crt-glass::before{
+ content:"";position:absolute;inset:0;
+ background:radial-gradient(ellipse 76% 86% at 50% 50%,transparent 64%,#0000001a 80%,#000000a6 100%),
+ linear-gradient(90deg,#00000075,transparent 4%,transparent 96%,#00000075),
+ linear-gradient(0deg,#00000047,transparent 6%,transparent 94%,#00000047);
+ opacity:var(--crt-vignette);box-shadow:inset 0 0 22px 1px rgb(16 8 23 / .1);
 }
-html.crt-enabled .crt-surface {
-  filter: none;
-  opacity: 0;
+.crt-glass::after{display:none}
+body.modal-open .crt-glass{opacity:.4}
+@media(max-width:600px){.crt-glass::before{box-shadow:inset 0 0 14px rgb(16 8 23 / .1)}}
+@media(prefers-reduced-motion:reduce){.crt-glass::before{opacity:.18}}
+@media print{
+ .crt-spacer,.crt-glass,.crt-filter-defs{display:none!important}
+ .crt-viewport{position:static!important;width:auto;height:auto;overflow:visible;contain:none;filter:none!important}
+ .crt-surface{transform:none!important;opacity:1!important}
 }
-.header {
-  z-index: 60;
-  background: #fff;
-  backdrop-filter: none;
-}
-.crt-glass {
-  position: fixed;
-  inset: 0;
-  z-index: 45;
-  pointer-events: none;
-  user-select: none;
-  overflow: hidden;
-  contain: strict;
-}
-.crt-glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 76% 86% at 50% 50%, transparent 64%, rgb(27 19 34 / .1) 80%, rgb(12 7 18 / .65) 100%),
-    linear-gradient(90deg, rgb(22 12 28 / .46), transparent 4%, transparent 96%, rgb(22 12 28 / .46)),
-    linear-gradient(0deg, rgb(22 12 28 / .28), transparent 6%, transparent 94%, rgb(22 12 28 / .28));
-  opacity: var(--crt-vignette);
-  box-shadow: inset 0 0 22px 1px rgb(16 8 23 / .1);
-}
-.crt-glass::after { display: none; }
-/* Top-layer dialogs remain crisp and interactive, above the decorative lens. */
-body.modal-open .crt-glass { opacity: .4; }
-@media(max-width:600px) {
-  .crt-glass::before { box-shadow: inset 0 0 14px rgb(16 8 23 / .1); }
-  .crt-glass::after { opacity: .075; }
-}
-@media(prefers-reduced-motion:reduce) {
-  html.crt-enabled .crt-surface { filter: none; }
-  .crt-glass::before { opacity: .18; }
-  .crt-glass::after { display: none; }
-}
-@media print {
-  html.crt-enabled .crt-surface { filter: none; }
-  .crt-glass,.crt-filter-defs { display: none; }
-}
-
-#crt-display{position:fixed;top:0;left:0;z-index:40;pointer-events:none;display:none}
-html.crt-enabled #crt-display{display:block}
-html.crt-enabled .crt-surface .work-cover,html.crt-enabled .crt-surface .work-caption,html.crt-enabled .crt-surface .work-product{transition:none!important}
-@media print{.crt-surface{opacity:1!important}#crt-display{display:none!important}}
