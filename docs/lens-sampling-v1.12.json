@@ -1,0 +1,86 @@
+{
+  "version": "1.12.0",
+  "description": "Numerical bilinear displacement-field reconstruction against the unchanged analytic lens. CSS-pixel errors; not browser glyph quality, actual SVG interpolation, supersampling, or FPS measurements.",
+  "cases": [
+    {
+      "width": 1440,
+      "height": 900,
+      "devicePixelRatio": 1,
+      "effectiveFieldDpr": 1,
+      "oldField": "96x96",
+      "newField": "240x150",
+      "oldStep": 0.3388235294117647,
+      "newStep": 0.22960338998559252,
+      "before": {
+        "rms": 0.25659735919443244,
+        "max": 1.2213978221670032,
+        "probes": 9216
+      },
+      "after": {
+        "rms": 0.06317249311815572,
+        "max": 0.13915348061094612,
+        "probes": 9216
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "devicePixelRatio": 1,
+      "effectiveFieldDpr": 1,
+      "oldField": "96x96",
+      "newField": "320x180",
+      "oldStep": 0.4517647058823529,
+      "newStep": 0.30548425854288147,
+      "before": {
+        "rms": 0.33319744548794,
+        "max": 1.6397291724255614,
+        "probes": 9216
+      },
+      "after": {
+        "rms": 0.09033717587482493,
+        "max": 0.1914504162525711,
+        "probes": 9216
+      }
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "devicePixelRatio": 2,
+      "effectiveFieldDpr": 2,
+      "oldField": "96x96",
+      "newField": "482x271",
+      "oldStep": 0.6023529411764705,
+      "newStep": 0.4056783577957374,
+      "before": {
+        "rms": 0.44426326065059063,
+        "max": 2.1863055632341726,
+        "probes": 9216
+      },
+      "after": {
+        "rms": 0.11407938992524329,
+        "max": 0.24456890777933993,
+        "probes": 9216
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "devicePixelRatio": 3,
+      "effectiveFieldDpr": 2,
+      "oldField": "96x96",
+      "newField": "130x282",
+      "oldStep": 0.19858823529411765,
+      "newStep": 0.13440425270342923,
+      "before": {
+        "rms": 0.142876460853532,
+        "max": 0.6932624784155098,
+        "probes": 9216
+      },
+      "after": {
+        "rms": 0.03977004115571019,
+        "max": 0.0860684596961767,
+        "probes": 9216
+      }
+    }
+  ]
+}
