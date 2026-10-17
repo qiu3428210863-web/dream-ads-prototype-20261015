@@ -1,6 +1,6 @@
 # Dream Ads — 第一版
 
-当前版本：v1.13.0。Showcase 标题右侧改为 Cards / Grid 分段选择器，支持大卡片横向视图与桌面每行五张的网格视图切换。切换时同一批卡片缩小后弹回，保留 CD 滑出、悬停与预览交互。网格模式正常上下滚动，小屏自动减少列数。曲面渲染沿用 v1.11；之前的画质优化已回退，诊断见 `docs/text-aliasing-diagnosis.md`。
+当前版本：v1.14.0。在保留曲面镜头与 Cards / Grid 交互的基础上，正文新增按设备像素密度分档的亚像素重采样，移除卡片大字额外的透视与独立滤镜，字体采用平台原生平滑。低性能环境可自动降低采样档位；不支持滤镜或开启系统强制颜色时保留无畸变的真实 DOM 内容。实现与验证边界见 `docs/v1.14-rendering.md`，此前诊断见 `docs/text-aliasing-diagnosis.md`。
 
 基于用户提供的 HTML 活动内容，参考 [OpenArt Arena](https://openart.ai/arena#ranking-panel) 的白/灰/粉视觉、三维物件、分类卡片、细边框面板和工具交互，实现的响应式静态网页。
 

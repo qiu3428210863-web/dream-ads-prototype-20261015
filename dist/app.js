@@ -75,7 +75,7 @@ function setShowcaseView(view){
  });
  carouselCards.forEach(card=>card.setAttribute('aria-roledescription',view==='grid'?'card':'slide'));
  railScroll.resize();pageScroll.resize();measureCarousel();
- if(!reducedCarouselMotion.matches){
+ if(!reducedCarouselMotion.matches&&typeof carouselCards[0]?.animate==='function'){
   viewAnimations=carouselCards.map((card,index)=>{
    const from=before[index],to=card.getBoundingClientRect();
    return card.animate([
