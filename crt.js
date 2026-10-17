@@ -2,8 +2,11 @@
 (()=>{
  'use strict';
  const root=document.documentElement,lens=globalThis.DreamLens,svgNS='http://www.w3.org/2000/svg';
+ if(root.dataset.crtDomLensInitialized==='true')return;
  const main=document.querySelector('main'),footer=document.querySelector('.footer'),header=document.querySelector('.header');
- const surface=document.createElement('div');surface.id='crt-surface';surface.className='crt-surface';surface.dataset.crtBuild='1.14.0';
+ if(!main||!footer||!header)return;
+ root.dataset.crtDomLensInitialized='true';
+ const surface=document.createElement('div');surface.id='crt-surface';surface.className='crt-surface';surface.dataset.crtBuild='1.15.0';
  main.before(surface);surface.append(main,footer);
  const spacer=document.createElement('div');spacer.className='crt-spacer';spacer.setAttribute('aria-hidden','true');surface.before(spacer);
  const viewport=document.createElement('div');viewport.id='crt-viewport';viewport.className='crt-viewport';surface.before(viewport);viewport.append(surface);
