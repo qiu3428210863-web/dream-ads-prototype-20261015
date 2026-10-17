@@ -4,6 +4,8 @@ import vm from 'node:vm';
 import {readFileSync,existsSync} from 'node:fs';
 
 const modelSource=readFileSync(new URL('../dist/lens-model.js',import.meta.url),'utf8');
+const crtSource=readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8');
+const showcaseGpuSource=readFileSync(new URL('../dist/showcase-gpu.js',import.meta.url),'utf8');
 function model(){const context=vm.createContext({Uint8ClampedArray,Math});vm.runInContext(modelSource,context);return context.DreamLens;}
 
 test('lens bends the screen perimeter while keeping its center fixed',()=>{
@@ -65,8 +67,8 @@ function boot(protocol='file:',options={}){
  sandbox={window,document,ResizeObserver:window.ResizeObserver,location:{protocol},innerHeight:900,scrollY:500,visualY:500.25,console,
   navigator:{deviceMemory:options.memory??8,hardwareConcurrency:options.cores??8},matchMedia,
   addEventListener(type,fn){events.set(type,fn);},requestAnimationFrame:fn=>{sandbox.raf=fn;return 1;}};
- const context=vm.createContext(sandbox);vm.runInContext(modelSource,context);vm.runInContext(readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8'),context);
- return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers,mediaQueries,flushRaf(){const callback=sandbox.raf;sandbox.raf=null;callback?.();}};
+ const context=vm.createContext(sandbox);vm.runInContext(modelSource,context);vm.runInContext(crtSource,context);
+ return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers,mediaQueries,reinitialize(){vm.runInContext(crtSource,context);},flushRaf(){const callback=sandbox.raf;sandbox.raf=null;callback?.();}};
 }
 test('file-origin initialization activates the live lens without reading any product image',()=>{
  const app=boot();
@@ -74,6 +76,12 @@ test('file-origin initialization activates the live lens without reading any pro
  assert.ok(app.root.classList.has('crt-enabled'));assert.equal(app.trace.canvases,4);assert.equal(app.trace.dataURLs,4);
  assert.equal(app.header.parentElement,app.body,'navigation stays outside the lens');assert.equal(app.main.parentElement,app.surface);
  assert.equal(app.warp.getAttribute('in'),'SourceGraphic');assert.equal(app.filter.getAttribute('width'),'1440');assert.equal(app.filter.getAttribute('height'),'900');
+});
+test('loading the live DOM lens twice does not create a second effect layer',()=>{
+ const app=boot();app.reinitialize();
+ assert.equal(app.body.children.filter(node=>node.id==='crt-viewport').length,1);
+ assert.equal(app.body.children.filter(node=>node.className==='crt-glass').length,1);
+ assert.equal(app.trace.canvases,4,'duplicate script execution cannot rebuild the SVG fields');
 });
 test('scroll updates live content offsets without rebuilding the viewport displacement field',()=>{
  const app=boot();assert.equal(app.surface.style.getPropertyValue('--crt-offset-y'),'-424.25px');
@@ -153,4 +161,15 @@ test('startup resources work under a static project subpath without a screenshot
   assert.equal(url.origin,'https://example.invalid');assert.ok(url.pathname.startsWith('/project/'));assert.ok(existsSync(new URL('../dist/'+match[1],import.meta.url)));
  }
  assert.ok(!html.includes('html2canvas'));assert.ok(!/<script[^>]*type=["']module["']/.test(html));
+ for(const path of ['crt.js','showcase-gpu.js'])assert.equal((html.match(new RegExp(`<script[^>]+src="${path}"`,'g'))||[]).length,1,`${path} must be loaded exactly once`);
+});
+
+test('GPU showcase follows the reference radial curve with mipmapped sampling and edge coverage',()=>{
+ assert.match(showcaseGpuSource,/factor=\(1\.0-\.3655\*uCurvature\)\*\(1\.0\+uCurvature\*r\*r\*r\)/);
+ assert.match(showcaseGpuSource,/gl\.LINEAR_MIPMAP_LINEAR/);
+ assert.match(showcaseGpuSource,/gl\.generateMipmap\(gl\.TEXTURE_2D\)/);
+ assert.match(showcaseGpuSource,/smoothstep\(-feather,feather,edge\)/);
+ assert.match(showcaseGpuSource,/uniform float uChromaticStrength/);
+ assert.match(showcaseGpuSource,/uniformChromatic,\.8/);
+ assert.match(showcaseGpuSource,/dataset\.crtShowcaseGpuInitialized/);
 });

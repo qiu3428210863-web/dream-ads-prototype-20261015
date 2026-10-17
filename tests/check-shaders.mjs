@@ -1,5 +1,6 @@
-// Backward-compatible command: v1.11 uses a live SVG lens, with no GPU shader compiler dependency.
+// Backward-compatible command name. It checks the SVG lens and WebGL source contract;
+// it does not compile the embedded GLSL or claim cross-browser visual verification.
 import {spawnSync} from 'node:child_process';
-console.log('The renderer now uses the live viewport lens. Running lens checks.');
+console.log('Checking the SVG viewport lens and analytic WebGL showcase renderer.');
 const result=spawnSync(process.execPath,['--test','tests/lens.test.mjs'],{stdio:'inherit'});
 process.exitCode=result.status??1;
