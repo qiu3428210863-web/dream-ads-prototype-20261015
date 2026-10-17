@@ -7,14 +7,19 @@ const concepts = [
  {id:'tech',category:'Tech & innovation',title:'Tune into another world.',product:'FORM · Wireless audio',art:'headphones.svg',headline:'Feel\neverything.',description:'Silver headphones drift through a quiet, sculptural soundscape. The product becomes a portal to a world of your own.',scenes:['Turn down the noise.','Turn up your world.','Feel everything.']},
  {id:'beauty-night',category:'Beauty & fragrance',title:'A softer kind of escape.',product:'REVERIE · After hours',art:'perfume.svg',headline:'Stay in the\ndaydream.',description:'A familiar fragrance returns after dark, wrapped in quiet light and a slower, more cinematic rhythm.',scenes:['The city slows down.','A familiar note returns.','Stay in the daydream.']},
  {id:'lifestyle-sunrise',category:'Food & lifestyle',title:'A brighter start.',product:'DAYBREAK · First light',art:'can.svg',headline:'Make room\nfor bright.',description:'A crisp citrus ritual meets the first light of morning, turning a small pause into a fresh beginning.',scenes:['A new day opens.','A little brightness.','Make room for bright.']},
- {id:'tech-sound',category:'Tech & innovation',title:'Find your frequency.',product:'FORM · Studio session',art:'headphones.svg',headline:'Find your\nown rhythm.',description:'A focused listening session moves from soft reflections to bold, immersive color.',scenes:['The world fades out.','Your own rhythm begins.','Find your frequency.']}
+ {id:'tech-sound',category:'Tech & innovation',title:'Find your frequency.',product:'FORM · Studio session',art:'headphones.svg',headline:'Find your\nown rhythm.',description:'A focused listening session moves from soft reflections to bold, immersive color.',scenes:['The world fades out.','Your own rhythm begins.','Find your frequency.']},
+ {id:'beauty-dusk',category:'Beauty & fragrance',title:'Leave the ordinary behind.',product:'REVERIE · Velvet hour',art:'perfume.svg',headline:'Leave the\nday behind.',description:'A signature fragrance marks the quiet transition from a busy day to a softer, more personal evening.',scenes:['The day slows down.','A softer mood arrives.','Leave the day behind.']},
+ {id:'lifestyle-picnic',category:'Food & lifestyle',title:'A brighter kind of break.',product:'DAYBREAK · Citrus picnic',art:'can.svg',headline:'Take a\ntaste break.',description:'A sparkling citrus drink turns a simple outdoor pause into a vivid little escape.',scenes:['Step outside.','Take in the color.','Take a taste break.']},
+ {id:'tech-studio',category:'Tech & innovation',title:'Sound takes shape.',product:'FORM · Studio edition',art:'headphones.svg',headline:'Make room\nfor sound.',description:'Sculptural headphones transform a focused studio session into an immersive world of sound.',scenes:['Find the quiet.','Build the rhythm.','Make room for sound.']},
+ {id:'beauty-morning',category:'Beauty & fragrance',title:'A note of possibility.',product:'REVERIE · Morning light',art:'perfume.svg',headline:'Wake up\nto wonder.',description:'A bright fragrance ritual sets the tone for a day that feels open, considered, and full of possibility.',scenes:['First light arrives.','A familiar ritual.','Wake up to wonder.']},
+ {id:'lifestyle-night',category:'Food & lifestyle',title:'Refresh after hours.',product:'DAYBREAK · Night citrus',art:'can.svg',headline:'Keep the\nnight bright.',description:'Crisp citrus and sparkling water bring a playful flash of energy to a late-night gathering.',scenes:['The evening begins.','The lights come up.','Keep the night bright.']},
+ {id:'tech-travel',category:'Tech & innovation',title:'Carry your own world.',product:'FORM · On the move',art:'headphones.svg',headline:'Go where\nyou feel.',description:'Wireless audio turns the everyday commute into a personal soundtrack and a world of your own.',scenes:['Step into the day.','Find your own pace.','Go where you feel.']}
 ];
 const grid = $('#showcase-grid');
 function renderConcepts() {
  grid.innerHTML = concepts.map((c,index) => {const theme=c.id.startsWith('beauty')?'beauty':c.id.startsWith('lifestyle')?'lifestyle':'tech';return `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${concepts.length}"><div class="work-disc ${theme}" aria-hidden="true"><div class="disc-art"><img src="assets/${c.art}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button class="work-open" data-preview="${c.id}" data-category="${theme}" aria-label="Preview ${c.title}" draggable="false"><div class="work-visual ${theme}"><div class="work-cover"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><img class="work-product" src="assets/${c.art}" alt="${c.product} concept illustration" width="680" height="680" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`;}).join('');
 }
 renderConcepts();
-const previousConcept=$('#carousel-prev'),nextConcept=$('#carousel-next');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
 let carouselStep=0,carouselLimit=0,lastCarouselIndex=-1,carouselPinY=Infinity,showcaseDock=null;
@@ -23,9 +28,6 @@ const viewButtons=$$('[data-showcase-view]');
 function updateCarousel(){
  const left=grid.scrollLeft,index=Math.min(carouselCards.length-1,Math.round(left/(carouselStep||1)));
  if(index!==lastCarouselIndex){carouselCounter.textContent=String(index+1).padStart(2,'0')+' / '+String(carouselCards.length).padStart(2,'0');lastCarouselIndex=index;}
- const atStart=left<1,atEnd=carouselLimit-left<1;
- if(previousConcept.disabled!==atStart)previousConcept.disabled=atStart;
- if(nextConcept.disabled!==atEnd)nextConcept.disabled=atEnd;
 }
 function measureCarousel(){
  const first=carouselCards[0],last=carouselCards[carouselCards.length-1];
@@ -152,7 +154,6 @@ addEventListener('wheel',event=>{
  else scrollCarouselTo(position+delta*(horizontal?1:1.25));
 },{capture:true,passive:false});
 function moveCarousel(direction){scrollCarouselTo(railScroll.targetScroll+direction*carouselStep);}
-previousConcept.addEventListener('click',()=>moveCarousel(-1));nextConcept.addEventListener('click',()=>moveCarousel(1));
 railScroll.on('scroll',updateCarousel);
 grid.addEventListener('keydown',event=>{
  if(showcaseView==='grid')return;

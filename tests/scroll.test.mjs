@@ -16,7 +16,7 @@ function boot(){
  }
  class Element extends Target{
   classList=new Set();style={};dataset={};scrollLeft=0;scrollTop=0;tagName='DIV';
-  clientWidth=1280;clientHeight=580;scrollWidth=3544;scrollHeight=580;offsetLeft=0;offsetTop=0;offsetWidth=560;offsetHeight=450;
+ clientWidth=1280;clientHeight=580;scrollWidth=7200;scrollHeight=580;offsetLeft=0;offsetTop=0;offsetWidth=560;offsetHeight=450;
   constructor(){super();this.classList.remove=(...names)=>names.forEach(name=>this.classList.delete(name));this.classList.contains=name=>this.classList.has(name);}
   querySelector(selector){return nodes.get(selector);}
   querySelectorAll(selector){return selector==='.work-card'?cards:selector==='[data-showcase-view]'?viewButtons:[];}
@@ -37,10 +37,10 @@ function boot(){
  }
  const win=new Window(),doc=new Element(),root=new Element(),body=new Element(),grid=new Element();
  root.scrollHeight=5000;root.scrollWidth=1280;
- const cards=Array.from({length:6},(_,i)=>{const card=new Element();card.offsetLeft=32+i*584;return card;});
+ const cards=Array.from({length:12},(_,i)=>{const card=new Element();card.offsetLeft=32+i*584;return card;});
  const viewButtons=['cards','grid'].map(view=>{const button=new Element();button.dataset.showcaseView=view;button.parentElement=grid;return button;});
  const header=new Element();header.getBoundingClientRect=()=>({height:76});
- const nodes=new Map([['#showcase-grid',grid],['#carousel-prev',new Element()],['#carousel-next',new Element()],['.carousel-counter',new Element()],['.header',header]]);
+ const nodes=new Map([['#showcase-grid',grid],['.carousel-counter',new Element()],['.header',header]]);
  doc.documentElement=root;doc.body=body;
  const sandbox={window:win,document:doc,Window,Element,HTMLElement:Element,HTMLAnchorElement:class extends Element{},
   navigator:{userAgent:'test'},performance:{now:()=>time},console,
@@ -177,7 +177,7 @@ test('an old cancelled transition cannot overwrite geometry after a rapid view c
  const first=app.cards.map(card=>card.animations[0]);app.evaluate('setShowcaseView("cards")');
  const current=app.cards.map(card=>card.animations[1]);
  first.forEach(animation=>animation.finish());
- assert.equal(app.evaluate('viewAnimations.length'),6);
+ assert.equal(app.evaluate('viewAnimations.length'),12);
  current.forEach(animation=>animation.finish());
  assert.equal(app.evaluate('viewAnimations.length'),0);
  assert.equal(app.evaluate('showcaseView'),'cards');
