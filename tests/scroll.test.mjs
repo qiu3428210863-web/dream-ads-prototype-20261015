@@ -19,7 +19,10 @@ function boot(){
   clientWidth=1280;clientHeight=580;scrollWidth=3480;scrollHeight=580;offsetLeft=0;
   constructor(){super();this.classList.remove=(...names)=>names.forEach(name=>this.classList.delete(name));this.classList.contains=name=>this.classList.has(name);}
   querySelector(selector){return nodes.get(selector);}
-  querySelectorAll(selector){return selector==='.work-card'?cards:[];}
+  querySelectorAll(selector){return selector==='.work-card'?cards:selector==='[data-showcase-view]'?viewButtons:[];}
+  attributes={};animations=[];
+  setAttribute(name,value){this.attributes[name]=value;}
+  animate(keyframes,options){const animation={keyframes,options,cancelled:false,cancel(){this.cancelled=true;}};this.animations.push(animation);return animation;}
   contains(element){return element===this||cards.includes(element);}
   closest(){return null;}
   hasAttribute(){return false;}
@@ -35,6 +38,7 @@ function boot(){
  const win=new Window(),doc=new Element(),root=new Element(),body=new Element(),grid=new Element();
  root.scrollHeight=5000;root.scrollWidth=1280;
  const cards=Array.from({length:6},(_,i)=>{const card=new Element();card.offsetLeft=32+i*584;return card;});
+ const viewButtons=['cards','grid'].map(view=>{const button=new Element();button.dataset.showcaseView=view;button.parentElement=grid;return button;});
  const header=new Element();header.getBoundingClientRect=()=>({height:76});
  const nodes=new Map([['#showcase-grid',grid],['#carousel-prev',new Element()],['#carousel-next',new Element()],['.carousel-counter',new Element()],['.header',header]]);
  doc.documentElement=root;doc.body=body;
@@ -55,7 +59,7 @@ function boot(){
   const event={type:'wheel',deltaY,deltaX,deltaMode,target:grid,cancelable:true,preventDefault(){this.defaultPrevented=true;},stopPropagation(){this.stopped=true;},stopImmediatePropagation(){this.stopped=true;},composedPath:()=>[grid,body,root,doc,win]};
   win.fire(event,true);if(!event.stopped)grid.fire(event);if(!event.stopped)win.fire(event);return event;
  }
- return {advance,wheel,evaluate,grid,win};
+ return {advance,wheel,evaluate,grid,win,cards,viewButtons};
 }
 function arrive(app){app.wheel(app.evaluate('carouselPinY-pageScroll.animatedScroll'));app.advance(60);}
 
@@ -99,4 +103,40 @@ test('reversing during arrival cancels docking and does not leave an input lock'
  const app=boot();app.wheel(400);app.advance(8);const y=app.win.scrollY;
  app.wheel(-120);app.advance(50);
  assert.ok(app.win.scrollY<y);assert.equal(app.grid.scrollLeft,0);assert.equal(app.evaluate('showcaseDock'),null);
+});
+
+test('grid switch cancels docking, releases vertical scroll, and preserves card nodes',()=>{
+ const app=boot();app.wheel(400);app.advance(8);
+ assert.ok(app.evaluate('showcaseDock'));
+ app.viewButtons[1].dispatchEvent({type:'click'});
+ assert.equal(app.evaluate('showcaseView'),'grid');
+ assert.equal(app.evaluate('showcaseDock'),null);
+ assert.equal(app.evaluate('carouselLimit'),0);
+ assert.equal(app.viewButtons[1].attributes['aria-pressed'],'true');
+ assert.equal(app.viewButtons[0].attributes['aria-pressed'],'false');
+ assert.equal(app.cards[0].attributes['aria-roledescription'],'card');
+ const y=app.win.scrollY;app.wheel(180);app.advance(40);
+ assert.ok(app.win.scrollY>y,'grid must not capture vertical input');
+ assert.equal(app.grid.scrollLeft,0);
+ assert.equal(app.cards[0].animations.length,1);
+ const frames=app.cards[0].animations[0].keyframes;
+ assert.ok(frames[1].transform.includes('scale(.78)'));
+ assert.ok(frames[2].transform.includes('scale(1.045)'));
+});
+
+test('switching back cancels unfinished animations and restores rail capture',()=>{
+ const app=boot();app.evaluate('setShowcaseView("grid")');
+ const first=app.cards[0].animations[0];
+ app.viewButtons[0].dispatchEvent({type:'click'});
+ assert.ok(first.cancelled);
+ assert.equal(app.evaluate('showcaseView'),'cards');
+ assert.ok(app.evaluate('carouselLimit')>0);
+ arrive(app);const y=app.win.scrollY;app.wheel(120);app.advance(20);
+ assert.equal(app.win.scrollY,y);assert.ok(app.grid.scrollLeft>0);
+});
+
+test('reduced motion changes layout without bounce animation',()=>{
+ const app=boot();app.evaluate('reducedCarouselMotion.matches=true;setShowcaseView("grid")');
+ assert.equal(app.evaluate('showcaseView'),'grid');
+ assert.equal(app.cards[0].animations.length,0);
 });
