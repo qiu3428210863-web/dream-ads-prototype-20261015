@@ -1,8 +1,8 @@
 /* Color values read from openart.ai/arena on 2026-10-17. */
 :root{
- --arena-page:#fafafa;--arena-white:#fff;--arena-card:#f3f5f4;
- --arena-plot:#f4f4f5;--arena-ink:#171817;--arena-muted:#656565;
- --arena-border:#e6e6e6;--arena-pink:#ff82db;--arena-action:#cd009b;
+ --arena-page:#090909;--arena-white:#fff;--arena-card:#f3f5f4;
+ --arena-plot:#f4f4f5;--arena-ink:#f5f5f5;--arena-muted:#a2a2a2;
+ --arena-border:#373737;--arena-pink:#ff82db;--arena-action:#cd009b;
  --arena-plum:#470c43;--arena-green:#bfe6bc;--arena-cyan:#9de9f6;
 }
 body,.crt-surface{background:var(--arena-page);color:var(--arena-ink)}
@@ -18,7 +18,7 @@ p{color:var(--arena-muted)}
 .button.light:hover,.icon-button:hover{background:var(--arena-card)}
 .text-button:hover,.footer a:hover,.footer button:hover{color:var(--arena-action)}
 .header,.mobile-nav{background:#fff;border-color:var(--arena-border)}
-.hero{background:#fff}
+.hero{background:var(--arena-page)}
 .art-orbit{background:radial-gradient(circle at 40% 30%,#fff,#fff5fc 35%,var(--arena-pink) 75%,#fb23c2);box-shadow:inset -8px -10px 40px #cd009b20,0 20px 65px #ff82db33}
 .hero-product{filter:grayscale(1) drop-shadow(0 24px 20px #0002)}
 .reward-card{border-color:var(--arena-border);background:linear-gradient(164deg,#ff82db14,#fff)}
