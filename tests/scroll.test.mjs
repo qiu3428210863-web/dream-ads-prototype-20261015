@@ -120,9 +120,11 @@ test('grid switch cancels docking, releases vertical scroll, and preserves card 
  assert.equal(app.grid.scrollLeft,0);
  assert.equal(app.cards[0].animations.length,1);
  const frames=app.cards[0].animations[0].keyframes;
- assert.equal(frames.length,2,'transition must have no bounce or overshoot');
- assert.equal(frames[1].transform,'translate(0,0) scale(1)');
- assert.equal(app.cards[0].animations[0].options.duration,1160);
+ assert.equal(frames.length,4,'transition retains shrink, bounce and settle');
+ assert.equal(frames[1].transform,'translate(0,0) scale(.78)');
+ assert.equal(frames[2].transform,'translate(0,0) scale(1.045)');
+ assert.equal(frames[3].transform,'translate(0,0) scale(1)');
+ assert.equal(app.cards[0].animations[0].options.duration,960);
 });
 
 test('switching back cancels unfinished animations and restores rail capture',()=>{
