@@ -6,6 +6,7 @@ import {readFileSync,existsSync} from 'node:fs';
 const modelSource=readFileSync(new URL('../dist/lens-model.js',import.meta.url),'utf8');
 const crtSource=readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8');
 const showcaseGpuSource=readFileSync(new URL('../dist/showcase-gpu.js',import.meta.url),'utf8');
+const showcaseQualitySource=readFileSync(new URL('../dist/showcase-quality.js',import.meta.url),'utf8');
 const appSource=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 function model(){const context=vm.createContext({Uint8ClampedArray,Math});vm.runInContext(modelSource,context);return context.DreamLens;}
 
@@ -162,7 +163,7 @@ test('startup resources work under a static project subpath without a screenshot
   assert.equal(url.origin,'https://example.invalid');assert.ok(url.pathname.startsWith('/project/'));assert.ok(existsSync(new URL('../dist/'+match[1],import.meta.url)));
  }
  assert.ok(!html.includes('html2canvas'));assert.ok(!/<script[^>]*type=["']module["']/.test(html));
- for(const path of ['crt.js','showcase-gpu.js'])assert.equal((html.match(new RegExp(`<script[^>]+src="${path}"`,'g'))||[]).length,1,`${path} must be loaded exactly once`);
+ for(const path of ['crt.js','showcase-quality.js','showcase-gpu.js'])assert.equal((html.match(new RegExp(`<script[^>]+src="${path}"`,'g'))||[]).length,1,`${path} must be loaded exactly once`);
 });
 
 test('GPU showcase follows the reference radial curve with mipmapped sampling and edge coverage',()=>{
@@ -180,6 +181,28 @@ test('GPU showcase paints dark card shells with legible light metadata',()=>{
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(text\.toUpperCase\(\)/);
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#f5f5f5';ctx\.fillText\(title\.innerText/);
  assert.match(showcaseGpuSource,/drawImage\(hoverVideo,v\)/);
+});
+
+test('showcase keeps a 1.5–2x source canvas while bounding memory and respecting device limits',()=>{
+ const context=vm.createContext({Math});vm.runInContext(showcaseQualitySource,context);
+ const quality=context.DreamShowcaseQuality;
+ const desktop=quality.settings(1920,1080,1,4096,8,8);
+ assert.equal(desktop.outputRatio,1);assert.equal(desktop.sourceRatio,1.75);assert.ok(desktop.sourcePixels>1920*1080);
+ const retina=quality.settings(1440,900,2,8192,8,8);
+ assert.equal(retina.outputRatio,2);assert.equal(retina.sourceRatio,3.5);
+ const constrained=quality.settings(2560,1440,2,4096,4,4);
+ assert.ok(constrained.lowPower);assert.ok(constrained.sourcePixels<=12_000_000);assert.ok(constrained.outputPixels<=12_000_000);
+ assert.ok(retina.sourcePixels<=16_000_000);
+ const textureBound=quality.settings(1920,1080,2,2048,8,8);
+ assert.ok(textureBound.sourceRatio<=2048/1920);assert.ok(textureBound.outputRatio<=2048/1920);
+});
+
+test('GPU showcase requests mipmaps, anisotropic filtering, and high-quality Canvas2D text and image sampling',()=>{
+ assert.match(showcaseGpuSource,/gl\.generateMipmap\(gl\.TEXTURE_2D\)/);
+ assert.match(showcaseGpuSource,/EXT_texture_filter_anisotropic/);
+ assert.match(showcaseGpuSource,/TEXTURE_MAX_ANISOTROPY_EXT/);
+ assert.match(showcaseGpuSource,/imageSmoothingQuality='high'/);
+ assert.match(showcaseGpuSource,/textRendering='geometricPrecision'/);
 });
 
 test('showcase plays previews inside the hovered thumbnail and keeps the controlled modal player',()=>{

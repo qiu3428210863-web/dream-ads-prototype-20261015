@@ -45,6 +45,8 @@
   gl.useProgram(program);vao=gl.createVertexArray();gl.bindVertexArray(vao);texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const anisotropy=gl.getExtension('EXT_texture_filter_anisotropic')||gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic')||gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+  if(anisotropy){const maximum=gl.getParameter(anisotropy.MAX_TEXTURE_MAX_ANISOTROPY_EXT)||1;gl.texParameterf(gl.TEXTURE_2D,anisotropy.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,maximum));}
   uniformSize=gl.getUniformLocation(program,'uOutputSize');uniformCurvature=gl.getUniformLocation(program,'uCurvature');uniformChromatic=gl.getUniformLocation(program,'uChromaticStrength');
   gl.uniform1i(gl.getUniformLocation(program,'uScene'),0);gl.uniform1f(uniformCurvature,window.DreamLens?.curvature??.16);gl.uniform1f(uniformChromatic,.8);
  }catch(error){console.warn('Showcase GPU lens:',error.message);return;}
@@ -86,14 +88,14 @@
   const lr=logo.getBoundingClientRect();drawImage(logo,lr,getComputedStyle(logo).filter);
   const cs=getComputedStyle(caption),fontSize=parseFloat(cs.fontSize)||60,line=parseFloat(cs.lineHeight)||fontSize*.91;
   const lines=caption.innerText.split(/\n|\r/).map(value=>value.trim()).filter(Boolean),centerX=v.x+v.w/2;
-  ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font=`900 ${fontSize}px ${cs.fontFamily||'Impact, sans-serif'}`;ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fontKerning='normal';ctx.textRendering='geometricPrecision';ctx.font=`900 ${fontSize}px ${cs.fontFamily||'Impact, sans-serif'}`;ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   ctx.save();ctx.translate(centerX,v.y+v.h*.25+fontSize);ctx.rotate(-4*Math.PI/180);
   lines.forEach((text,index)=>{ctx.fillStyle='#171817';ctx.fillText(text.toUpperCase(),0,index*line);});
   ctx.restore();
   ctx.restore();
   ctx.fillStyle='#151515';ctx.fillRect(m.x,m.y,m.w,m.h);
-  if(title){const r=title.getBoundingClientRect(),style=getComputedStyle(title);ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||23}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#f5f5f5';ctx.fillText(title.innerText,r.left,r.top);}
-  if(sub){const r=sub.getBoundingClientRect(),style=getComputedStyle(sub);ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||14}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#a2a2a2';ctx.fillText(sub.innerText,r.left,r.top);}
+  if(title){const r=title.getBoundingClientRect(),style=getComputedStyle(title);ctx.fontKerning='normal';ctx.textRendering='geometricPrecision';ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||23}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#f5f5f5';ctx.fillText(title.innerText,r.left,r.top);}
+  if(sub){const r=sub.getBoundingClientRect(),style=getComputedStyle(sub);ctx.fontKerning='normal';ctx.textRendering='geometricPrecision';ctx.font=`${style.fontWeight} ${parseFloat(style.fontSize)||14}px ${style.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#a2a2a2';ctx.fillText(sub.innerText,r.left,r.top);}
   if(card.matches('.is-previewing')){
    const failed=card.classList.contains('preview-load-error'),hasVideo=hoverVideo?.readyState>=2;
    const label=failed?'VIDEO UNAVAILABLE':hasVideo?'MUTED PREVIEW':'STORYBOARD · MUTED';
@@ -106,15 +108,16 @@
  function size(){
   const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),dpr=Math.max(1,window.devicePixelRatio||1);
   const maxTexture=gl.getParameter(gl.MAX_TEXTURE_SIZE);
-  const outputRatio=Math.min(dpr,4,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
+  const quality=window.DreamShowcaseQuality?.settings(width,height,dpr,maxTexture,navigator.deviceMemory,navigator.hardwareConcurrency);
+  const outputRatio=quality?.outputRatio??Math.min(dpr,4,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
   if(outputRatio<1){suspended=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;return;}
   suspended=false;
-  const sourceRatio=Math.min(outputRatio*1.5,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
+  const sourceRatio=quality?.sourceRatio??Math.min(outputRatio*1.5,Math.sqrt(12000000/(width*height)),maxTexture/width,maxTexture/height);
   const ow=Math.max(1,Math.round(width*outputRatio)),oh=Math.max(1,Math.round(height*outputRatio));
   const sw=Math.max(1,Math.round(width*sourceRatio)),sh=Math.max(1,Math.round(height*sourceRatio));
   if(output.width!==ow||output.height!==oh||scene.width!==sw||scene.height!==sh){output.width=ow;output.height=oh;scene.width=sw;scene.height=sh;dirty=true;}
-  ctx.setTransform(sourceRatio,0,0,sourceRatio,0,0);ctx.clearRect(0,0,width,height);
-  gl.viewport(0,0,ow,oh);gl.uniform2f(uniformSize,ow,oh);output.dataset.outputDpr=String(outputRatio);output.dataset.sourceDpr=String(sourceRatio);
+  ctx.setTransform(sourceRatio,0,0,sourceRatio,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,width,height);
+  gl.viewport(0,0,ow,oh);gl.uniform2f(uniformSize,ow,oh);output.dataset.outputDpr=String(outputRatio);output.dataset.sourceDpr=String(sourceRatio);output.dataset.sourcePixels=String(quality?.sourcePixels??sw*sh);output.dataset.anisotropy=String(Boolean(anisotropy));
  }
  function render(){
   const cards=[...grid.querySelectorAll('.work-card')];if(failed||suspended||!cards.length)return false;
@@ -122,7 +125,7 @@
   if(!dirty&&scroll.x===lastX&&scroll.y===lastY)return false;
   dirty=false;lastX=scroll.x;lastY=scroll.y;
   const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),scale=scene.width/width;
-  ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,width,height);
+  ctx.setTransform(scale,0,0,scale,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,width,height);
   try{cards.forEach(paintDisc);cards.forEach(paintCard);}
   catch(error){failed=true;root.classList.remove('crt-gpu-showcase');output.remove();active=false;console.warn('Showcase GPU lens fallback:',error.message);return false;}
   try{
