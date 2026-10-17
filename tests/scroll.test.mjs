@@ -16,13 +16,13 @@ function boot(){
  }
  class Element extends Target{
   classList=new Set();style={};dataset={};scrollLeft=0;scrollTop=0;tagName='DIV';
-  clientWidth=1280;clientHeight=580;scrollWidth=3480;scrollHeight=580;offsetLeft=0;
+  clientWidth=1280;clientHeight=580;scrollWidth=3544;scrollHeight=580;offsetLeft=0;offsetTop=0;offsetWidth=560;offsetHeight=450;
   constructor(){super();this.classList.remove=(...names)=>names.forEach(name=>this.classList.delete(name));this.classList.contains=name=>this.classList.has(name);}
   querySelector(selector){return nodes.get(selector);}
   querySelectorAll(selector){return selector==='.work-card'?cards:selector==='[data-showcase-view]'?viewButtons:[];}
   attributes={};animations=[];
   setAttribute(name,value){this.attributes[name]=value;}
-  animate(keyframes,options){const animation={keyframes,options,cancelled:false,cancel(){this.cancelled=true;}};this.animations.push(animation);return animation;}
+  animate(keyframes,options){const animation={keyframes,options,cancelled:false,cancel(){this.cancelled=true;},finish(){this.onfinish?.();}};this.animations.push(animation);return animation;}
   contains(element){return element===this||cards.includes(element);}
   closest(){return null;}
   hasAttribute(){return false;}
@@ -48,7 +48,7 @@ function boot(){
   requestAnimationFrame:fn=>{frames.set(++nextFrame,fn);return nextFrame;},cancelAnimationFrame:id=>frames.delete(id),
   ResizeObserver:class{observe(){}disconnect(){}},MutationObserver:class{observe(){}},
   setTimeout:()=>1,clearTimeout(){},CustomEvent:class{constructor(type,options){this.type=type;Object.assign(this,options);}},
-  getComputedStyle:()=>({scrollPaddingTop:'0',scrollPaddingLeft:'0',scrollMarginLeft:'0',scrollMarginTop:'0'})};
+  getComputedStyle:()=>({paddingLeft:'32px',paddingRight:'32px',scrollPaddingTop:'0',scrollPaddingLeft:'0',scrollMarginLeft:'0',scrollMarginTop:'0'})};
  Object.defineProperty(sandbox,'scrollY',{get:()=>win.scrollY});
  const context=vm.createContext(sandbox);
  vm.runInContext(readFileSync(new URL('../dist/vendor/lenis-1.3.27.min.js',import.meta.url),'utf8'),context);
@@ -120,8 +120,9 @@ test('grid switch cancels docking, releases vertical scroll, and preserves card 
  assert.equal(app.grid.scrollLeft,0);
  assert.equal(app.cards[0].animations.length,1);
  const frames=app.cards[0].animations[0].keyframes;
- assert.ok(frames[1].transform.includes('scale(.78)'));
- assert.ok(frames[2].transform.includes('scale(1.045)'));
+ assert.equal(frames.length,2,'transition must have no bounce or overshoot');
+ assert.equal(frames[1].transform,'translate(0,0) scale(1)');
+ assert.equal(app.cards[0].animations[0].options.duration,1160);
 });
 
 test('switching back cancels unfinished animations and restores rail capture',()=>{
@@ -139,4 +140,34 @@ test('reduced motion changes layout without bounce animation',()=>{
  const app=boot();app.evaluate('reducedCarouselMotion.matches=true;setShowcaseView("grid")');
  assert.equal(app.evaluate('showcaseView'),'grid');
  assert.equal(app.cards[0].animations.length,0);
+});
+
+test('layout measurements ignore animated card bounds and transformed scroll overflow',()=>{
+ const app=boot(),pin=app.evaluate('carouselPinY');
+ app.evaluate('setShowcaseView("grid");setShowcaseView("cards")');
+ const limit=app.evaluate('carouselLimit');
+ app.cards[0].getBoundingClientRect=()=>({top:-400,width:260,height:200,left:500});
+ app.grid.scrollWidth=12000;
+ app.evaluate('measureCarousel()');
+ assert.equal(app.evaluate('carouselPinY'),pin,'temporary FLIP pixels cannot change the stop position');
+ assert.equal(app.evaluate('carouselLimit'),limit,'temporary FLIP overflow cannot enlarge the rail');
+});
+
+test('wheel over restored cards eases back to center even when the page is below the stop',()=>{
+ const app=boot();app.evaluate('setShowcaseView("grid");pageScroll.scrollTo(carouselPinY+180,{immediate:true});setShowcaseView("cards")');
+ const y=app.win.scrollY;app.wheel(120);app.advance(3);
+ assert.ok(app.win.scrollY<y,'recapture eases to the center rather than continuing down the page');
+ app.advance(80);
+ assert.equal(app.win.scrollY,app.evaluate('carouselPinY'));assert.ok(app.grid.scrollLeft>0);
+});
+
+test('an old cancelled transition cannot overwrite geometry after a rapid view change',()=>{
+ const app=boot();app.evaluate('setShowcaseView("grid")');
+ const first=app.cards.map(card=>card.animations[0]);app.evaluate('setShowcaseView("cards")');
+ const current=app.cards.map(card=>card.animations[1]);
+ first.forEach(animation=>animation.finish());
+ assert.equal(app.evaluate('viewAnimations.length'),6);
+ current.forEach(animation=>animation.finish());
+ assert.equal(app.evaluate('viewAnimations.length'),0);
+ assert.equal(app.evaluate('showcaseView'),'cards');
 });
