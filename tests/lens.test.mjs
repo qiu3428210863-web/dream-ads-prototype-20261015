@@ -173,3 +173,10 @@ test('GPU showcase follows the reference radial curve with mipmapped sampling an
  assert.match(showcaseGpuSource,/uniformChromatic,\.8/);
  assert.match(showcaseGpuSource,/dataset\.crtShowcaseGpuInitialized/);
 });
+
+test('GPU showcase paint matches the light page palette instead of the retired black card palette',()=>{
+ assert.match(showcaseGpuSource,/ctx\.fillStyle='#ffffff';ctx\.fill\(\);ctx\.clip\(\)/);
+ assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(text\.toUpperCase\(\)/);
+ assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(title\.innerText/);
+ assert.doesNotMatch(showcaseGpuSource,/ctx\.fillStyle='#090909'/);
+});
