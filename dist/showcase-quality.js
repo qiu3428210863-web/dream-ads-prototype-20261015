@@ -7,7 +7,9 @@
   const outputBudget=12_000_000,sourceBudget=lowPower?12_000_000:16_000_000;
   const textureLimit=Math.min(maxTexture/width,maxTexture/height);
   const outputRatio=Math.min(dpr,4,Math.sqrt(outputBudget/area),textureLimit);
-  const desiredSourceRatio=Math.max(outputRatio*1.75,Math.min(2,dpr)*1.75);
+  // Keep one generous supersampling step while avoiding a 2.6x viewport texture
+  // that must be repainted and uploaded on every horizontal-scroll frame.
+  const desiredSourceRatio=outputRatio*1.5;
   const sourceRatio=Math.min(desiredSourceRatio,Math.sqrt(sourceBudget/area),textureLimit);
   return {outputRatio,sourceRatio,outputPixels:Math.round(area*outputRatio*outputRatio),sourcePixels:Math.round(area*sourceRatio*sourceRatio),lowPower};
  }

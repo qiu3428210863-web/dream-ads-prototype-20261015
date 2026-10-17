@@ -184,13 +184,13 @@ test('GPU showcase paints dark card shells with legible light metadata',()=>{
  assert.match(showcaseGpuSource,/drawImage\(hoverVideo,box\(hoverVideo\.getBoundingClientRect\(\)\)\)/);
 });
 
-test('showcase keeps a 1.5–2x source canvas while bounding memory and respecting device limits',()=>{
+test('showcase keeps a 1.5x supersampled source canvas while bounding memory and respecting device limits',()=>{
  const context=vm.createContext({Math});vm.runInContext(showcaseQualitySource,context);
  const quality=context.DreamShowcaseQuality;
  const desktop=quality.settings(1920,1080,1,4096,8,8);
- assert.equal(desktop.outputRatio,1);assert.equal(desktop.sourceRatio,1.75);assert.ok(desktop.sourcePixels>1920*1080);
+ assert.equal(desktop.outputRatio,1);assert.equal(desktop.sourceRatio,1.5);assert.ok(desktop.sourcePixels>1920*1080);
  const retina=quality.settings(1440,900,2,8192,8,8);
- assert.equal(retina.outputRatio,2);assert.equal(retina.sourceRatio,3.5);
+ assert.equal(retina.outputRatio,2);assert.equal(retina.sourceRatio,3);
  const constrained=quality.settings(2560,1440,2,4096,4,4);
  assert.ok(constrained.lowPower);assert.ok(constrained.sourcePixels<=12_000_000);assert.ok(constrained.outputPixels<=12_000_000);
  assert.ok(retina.sourcePixels<=16_000_000);
@@ -200,6 +200,8 @@ test('showcase keeps a 1.5–2x source canvas while bounding memory and respecti
 
 test('GPU showcase requests mipmaps, anisotropic filtering, and high-quality Canvas2D text and image sampling',()=>{
  assert.match(showcaseGpuSource,/gl\.generateMipmap\(gl\.TEXTURE_2D\)/);
+ assert.match(showcaseGpuSource,/gl\.texSubImage2D\(gl\.TEXTURE_2D,0,0,0,gl\.RGBA,gl\.UNSIGNED_BYTE,scene\)/);
+ assert.match(showcaseGpuSource,/textureWidth!==sw\|\|textureHeight!==sh\).*gl\.texImage2D\(gl\.TEXTURE_2D,0,gl\.RGBA8,sw,sh,0,gl\.RGBA,gl\.UNSIGNED_BYTE,null\)/);
  assert.match(showcaseGpuSource,/EXT_texture_filter_anisotropic/);
  assert.match(showcaseGpuSource,/TEXTURE_MAX_ANISOTROPY_EXT/);
  assert.match(showcaseGpuSource,/imageSmoothingQuality='high'/);
