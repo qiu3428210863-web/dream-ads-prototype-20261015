@@ -180,7 +180,7 @@ test('GPU showcase paints dark card shells with legible light metadata',()=>{
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#151515';ctx\.fill\(\);ctx\.clip\(\)/);
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(text\.toUpperCase\(\)/);
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#f5f5f5';ctx\.fillText\(title\.innerText/);
- assert.match(showcaseGpuSource,/drawImage\(hoverVideo,v\)/);
+ assert.match(showcaseGpuSource,/drawImage\(hoverVideo,box\(hoverVideo\.getBoundingClientRect\(\)\)\)/);
 });
 
 test('showcase keeps a 1.5–2x source canvas while bounding memory and respecting device limits',()=>{
@@ -218,6 +218,11 @@ test('showcase plays previews inside the hovered thumbnail and keeps the control
  assert.match(appSource,/No video file attached/);
  assert.doesNotMatch(appSource,/class="mini-player"/);
  assert.doesNotMatch(showcaseGpuSource,/paintMiniPlayer/);
- assert.match(showcaseGpuSource,/STORYBOARD · MUTED/);
+ assert.doesNotMatch(showcaseGpuSource,/STORYBOARD · MUTED/);
  assert.match(showcaseGpuSource,/VIDEO UNAVAILABLE/);
+ assert.match(showcaseGpuSource,/rounded\(ctx,v\.x,v\.y,v\.w,v\.h,18\);ctx\.clip\(\)/);
+ assert.match(showcaseGpuSource,/ctx\.lineWidth=stroke;rounded\(ctx,v\.x\+stroke\/2,v\.y\+stroke\/2,v\.w-stroke,v\.h-stroke,18\)/);
+ const showcaseCss=readFileSync(new URL('../dist/showcase.css',import.meta.url),'utf8');
+ assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(\.99\)\}/);
+ assert.match(showcaseCss,/inset:0;border-radius:18px;padding:1\.25px/);
 });
