@@ -10,6 +10,7 @@ html.crt-enabled .crt-viewport{filter:url(#crt-lens)}
 .crt-surface{
  display:flow-root;width:100%;isolation:isolate;background:#fafafa;
  transform:translate3d(0,var(--crt-offset-y,0px),0);transform-origin:0 0;
+ -webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto;
  opacity:1;filter:none;
 }
 .header{z-index:60;background:#fff;backdrop-filter:none}
