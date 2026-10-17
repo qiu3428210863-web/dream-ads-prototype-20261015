@@ -66,12 +66,16 @@ function beginShowcaseDock(direction,pending=0){
 // FLIP animates the existing sleeves; covers, CD hover and preview listeners stay intact.
 function setShowcaseView(view){
  if(!['cards','grid'].includes(view)||view===showcaseView)return;
- const before=carouselCards.map(card=>card.getBoundingClientRect());
  viewAnimations.forEach(animation=>animation.cancel());viewAnimations=[];
+ const fromView=showcaseView;
+ // A grid has a stable origin. Reset the rail before measuring so a switch from
+ // the middle/end of the carousel does not send cards flying across the page.
+ if(view==='grid')railScroll.scrollTo(0,{immediate:true});
+ const before=carouselCards.map(card=>card.getBoundingClientRect());
  showcaseDock=null;pageScroll.scrollTo(pageScroll.animatedScroll,{immediate:true});
  if(drag&&grid.hasPointerCapture(drag.id))grid.releasePointerCapture(drag.id);
  drag=null;grid.classList.remove('is-dragging');
- railScroll.scrollTo(0,{immediate:true});showcaseView=view;grid.dataset.view=view;railReentry=view==='cards';
+ if(view!=='grid')railScroll.scrollTo(0,{immediate:true});showcaseView=view;grid.dataset.view=view;railReentry=view==='cards';
  grid.setAttribute('aria-label',view==='grid'?'Concept gallery, grid view':'Concept gallery, horizontal card view');
  viewButtons.forEach(button=>{
   button.setAttribute('aria-pressed',String(button.dataset.showcaseView===view));
@@ -82,6 +86,20 @@ function setShowcaseView(view){
  if(!reducedCarouselMotion.matches&&typeof carouselCards[0]?.animate==='function'){
   viewAnimations=carouselCards.map((card,index)=>{
    const from=before[index],to=card.getBoundingClientRect();
+   if(fromView==='cards'&&view==='grid'){
+    const visible=from.right>0&&from.left<innerWidth&&from.bottom>0&&from.top<innerHeight;
+    if(!visible)return card.animate([
+     {opacity:0,transform:'scale(.96)',transformOrigin:'center center',offset:0},
+     {opacity:1,transform:'scale(1)',transformOrigin:'center center',offset:1}
+    ],{duration:480,delay:Math.max(0,index-2)*42,easing:'cubic-bezier(.2,.72,.24,1)',fill:'none'});
+    const dx=from.left+from.width/2-(to.left+to.width/2),dy=from.top+from.height/2-(to.top+to.height/2);
+    return card.animate([
+     {transform:`translate(${dx}px,${dy}px) scale(${from.width/to.width},${from.height/to.height})`,transformOrigin:'center center',offset:0},
+     {transform:'translate(0,0) scale(1)',transformOrigin:'center center',offset:.78},
+     {transform:'translate(0,0) scale(1.025)',transformOrigin:'center center',offset:.91},
+     {transform:'translate(0,0) scale(1)',transformOrigin:'center center',offset:1}
+    ],{duration:900,easing:'cubic-bezier(.2,.72,.24,1)',fill:'none'});
+   }
    return card.animate([
     {transform:`translate(${from.left-to.left}px,${from.top-to.top}px) scale(${from.width/to.width},${from.height/to.height})`,offset:0},
     {transform:'translate(0,0) scale(.78)',offset:.55},
