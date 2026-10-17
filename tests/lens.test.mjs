@@ -64,9 +64,9 @@ function boot(protocol='file:',options={}){
  if(options.noComposite)delete window.SVGFECompositeElement;
  sandbox={window,document,ResizeObserver:window.ResizeObserver,location:{protocol},innerHeight:900,scrollY:500,visualY:500.25,console,
   navigator:{deviceMemory:options.memory??8,hardwareConcurrency:options.cores??8},matchMedia,
-  addEventListener(type,fn){events.set(type,fn);},requestAnimationFrame:()=>1};
+  addEventListener(type,fn){events.set(type,fn);},requestAnimationFrame:fn=>{sandbox.raf=fn;return 1;}};
  const context=vm.createContext(sandbox);vm.runInContext(modelSource,context);vm.runInContext(readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8'),context);
- return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers,mediaQueries};
+ return {sandbox,body,header,main,root,surface:body.querySelector('#crt-surface'),filter:body.querySelector('filter'),warp:body.querySelector('feDisplacementMap'),trace,subscribers,events,observers,mediaQueries,flushRaf(){const callback=sandbox.raf;sandbox.raf=null;callback?.();}};
 }
 test('file-origin initialization activates the live lens without reading any product image',()=>{
  const app=boot();
@@ -79,11 +79,12 @@ test('scroll updates live content offsets without rebuilding the viewport displa
  const app=boot();assert.equal(app.surface.style.getPropertyValue('--crt-offset-y'),'-424.25px');
  for(let i=0;i<30;i++){app.sandbox.visualY+=.5;app.subscribers[0]();}
  assert.equal(app.surface.style.getPropertyValue('--crt-offset-y'),'-439.25px');assert.equal(app.trace.canvases,4);assert.equal(app.filter.getAttribute('y'),'0');
- app.surface.scrollHeight=4900;app.observers[0]();assert.equal(app.body.children.find(node=>node.className==='crt-spacer').style.height,'4900px');assert.equal(app.trace.canvases,4);
+ app.surface.scrollHeight=4900;app.observers[0]();app.flushRaf();assert.equal(app.body.children.find(node=>node.className==='crt-spacer').style.height,'4900px');assert.equal(app.trace.canvases,4);
 });
 test('HTTP hosting uses the same renderer and viewport resizing regenerates only its field',()=>{
  const app=boot('https:');assert.equal(app.surface.dataset.crtProtocol,'https:');
  app.root.clientWidth=390;app.sandbox.innerHeight=844;app.events.get('resize')();
+ app.flushRaf();
  assert.equal(app.filter.getAttribute('width'),'390');assert.equal(app.filter.getAttribute('height'),'844');assert.equal(app.trace.canvases,8);assert.equal(app.surface.dataset.crtStatus,'ready');
 });
 
@@ -104,7 +105,7 @@ test('pixel density and memory bound reconstruction workload independently of OS
  const lens=model();
  for(const [w,h,dpr,memory,cores,count] of [[1440,900,1,8,8,4],[1920,1080,1,8,8,2],[390,844,3,4,8,1],[2560,1440,2,16,16,1],[1440,900,1.25,8,4,2]]){
   const quality=lens.quality(w,h,dpr,memory,cores);
-  assert.equal(quality.taps.length,count);assert.ok(quality.width*quality.height<=131072);
+  assert.equal(quality.taps.length,count);assert.ok(quality.width*quality.height<=524288);
   for(const [x,y] of quality.taps){assert.ok(Math.abs(x*dpr)<=.25);assert.ok(Math.abs(y*dpr)<=.25);}
  }
 });
@@ -112,6 +113,7 @@ test('pixel density and memory bound reconstruction workload independently of OS
 test('moving between different-density screens rebuilds the pipeline once',()=>{
  const app=boot();app.sandbox.window.devicePixelRatio=2;
  app.mediaQueries.find(query=>query.query.includes('resolution:')).change();
+ app.flushRaf();
  assert.equal(app.surface.dataset.crtPixelRatio,'2');assert.equal(app.surface.dataset.crtSamples,'1');
  assert.equal(app.trace.canvases,5);
  app.events.get('resize')();assert.equal(app.trace.canvases,5);

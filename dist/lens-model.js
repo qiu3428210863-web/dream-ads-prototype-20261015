@@ -13,8 +13,10 @@
   const lowMemory=memory<=4,tapCount=lowMemory||physicalPixels>3000000?1:physicalPixels<=1800000&&cores>=8?4:2;
   const d=.25/pixelRatio;
   const taps=tapCount===4?[[-d,-d],[d,-d],[-d,d],[d,d]]:tapCount===2?[[-d,-d],[d,d]]:[[0,0]];
-  const columns=Math.max(32,Math.ceil(width*pixelRatio/4)),rows=Math.max(32,Math.ceil(height*pixelRatio/4));
-  const budget=Math.min(1,640/columns,640/rows,Math.sqrt(131072/(columns*rows)));
+  // Keep the control field close to the output's physical pixel grid. A coarse
+  // map produces visible stepping along glyph edges after the lens warp.
+  const columns=Math.max(32,Math.ceil(width*pixelRatio/2)),rows=Math.max(32,Math.ceil(height*pixelRatio/2));
+  const budget=Math.min(1,1024/columns,1024/rows,Math.sqrt(524288/(columns*rows)));
   const peak=Math.min(.5,Math.cbrt((1-compensation)/(4*compensation*curvature)));
   const maxShift=peak*(1-compensation*(1+curvature*peak**3))*Math.max(width,height);
   return {pixelRatio,taps,width:Math.max(1,Math.floor(columns*budget)),height:Math.max(1,Math.floor(rows*budget)),scale:2*(maxShift+.75/pixelRatio)};

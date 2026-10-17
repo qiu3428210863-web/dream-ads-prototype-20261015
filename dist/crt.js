@@ -12,7 +12,7 @@
  document.body.append(defs);
  const glass=document.createElement('div');glass.className='crt-glass';glass.setAttribute('aria-hidden','true');document.body.append(glass);
  const filter=defs.querySelector('filter'),contrast=matchMedia('(forced-colors: active)');
- let width=0,height=0,surfaceTop=0,lastY=NaN,ready=false,redirecting=false,frame=0,renderKey='',densityQuery;
+ let width=0,height=0,surfaceTop=0,lastY=NaN,ready=false,redirecting=false,frame=0,resizeFrame=0,renderKey='',densityQuery;
  let tapCap=4,previousTime=NaN,budgetFrames=0,slowFrames=0;
  const position=()=>window.DreamScroll?.position().y??scrollY;
  function measure(){
@@ -76,6 +76,10 @@
   if(window.DreamScroll){window.DreamScroll.requestFrame();return;}
   if(!frame)frame=requestAnimationFrame(()=>{frame=0;draw();});
  }
+ function scheduleMeasure(){
+  if(resizeFrame)return;
+  resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;measure();});
+ }
  // SVG filters change pixels but not DOM hit boxes; remap clicks to source coordinates.
  viewport.addEventListener('click',event=>{
   if(!ready||redirecting||event.detail===0)return;
@@ -92,13 +96,15 @@
  window.DreamScroll?.onFrame(draw);
  function watchDensity(){
   densityQuery?.removeEventListener?.('change',densityChanged);
+  densityQuery?.removeListener?.(densityChanged);
   densityQuery=matchMedia(`(resolution: ${window.devicePixelRatio||1}dppx)`);
-  densityQuery.addEventListener?.('change',densityChanged);
+  if(densityQuery.addEventListener)densityQuery.addEventListener('change',densityChanged);
+  else densityQuery.addListener?.(densityChanged);
  }
- function densityChanged(){watchDensity();measure();}
+ function densityChanged(){watchDensity();scheduleMeasure();}
  watchDensity();contrast.addEventListener?.('change',measure);
- addEventListener('scroll',wake,{passive:true});addEventListener('resize',measure,{passive:true});addEventListener('pageshow',measure);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden){measure();wake();}});
- if('ResizeObserver' in window)new ResizeObserver(measure).observe(surface);
+ addEventListener('scroll',wake,{passive:true});addEventListener('resize',scheduleMeasure,{passive:true});addEventListener('pageshow',scheduleMeasure);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){scheduleMeasure();wake();}});
+ if('ResizeObserver' in window)new ResizeObserver(scheduleMeasure).observe(surface);
  measure();
 })();
