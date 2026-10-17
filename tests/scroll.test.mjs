@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+
+// Run the shipped Lenis build and the application's actual scroll setup against a small DOM fixture.
+function boot(){
+ let time=0,nextFrame=0;
+ const frames=new Map();
+ class Target{
+  listeners=new Map();
+  addEventListener(type,fn,options={}){const entries=this.listeners.get(type)||[];entries.push({fn,capture:options===true||!!options.capture});this.listeners.set(type,entries);}
+  removeEventListener(type,fn){this.listeners.set(type,(this.listeners.get(type)||[]).filter(entry=>entry.fn!==fn));}
+  fire(event,capture=false){for(const entry of this.listeners.get(event.type)||[]){if(entry.capture!==capture)continue;entry.fn(event);if(event.stopped)break;}}
+  dispatchEvent(event){this.fire(event,true);if(!event.stopped)this.fire(event,false);}
+ }
+ class Element extends Target{
+  classList=new Set();style={};dataset={};scrollLeft=0;scrollTop=0;tagName='DIV';
+  clientWidth=1280;clientHeight=580;scrollWidth=3480;scrollHeight=580;offsetLeft=0;
+  constructor(){super();this.classList.remove=(...names)=>names.forEach(name=>this.classList.delete(name));this.classList.contains=name=>this.classList.has(name);}
+  querySelector(selector){return nodes.get(selector);}
+  querySelectorAll(selector){return selector==='.work-card'?cards:[];}
+  contains(element){return element===this||cards.includes(element);}
+  closest(){return null;}
+  hasAttribute(){return false;}
+  getBoundingClientRect(){return {left:0,top:1100-win.scrollY,width:560,height:450,right:560,bottom:1550-win.scrollY};}
+  scrollTo({left,top}){if(left!==undefined)this.scrollLeft=left;if(top!==undefined)this.scrollTop=top;}
+  setPointerCapture(){}hasPointerCapture(){return true;}releasePointerCapture(){}
+ }
+ class Window extends Target{
+  innerWidth=1280;innerHeight=900;scrollY=650;scrollX=0;
+  matchMedia(){return {matches:false,addEventListener(){},removeEventListener(){}};}
+  scrollTo({top,left}){if(top!==undefined)this.scrollY=top;if(left!==undefined)this.scrollX=left;}
+ }
+ const win=new Window(),doc=new Element(),root=new Element(),body=new Element(),grid=new Element();
+ root.scrollHeight=5000;root.scrollWidth=1280;
+ const cards=Array.from({length:6},(_,i)=>{const card=new Element();card.offsetLeft=32+i*584;return card;});
+ const header=new Element();header.getBoundingClientRect=()=>({height:76});
+ const nodes=new Map([['#showcase-grid',grid],['#carousel-prev',new Element()],['#carousel-next',new Element()],['.carousel-counter',new Element()],['.header',header]]);
+ doc.documentElement=root;doc.body=body;
+ const sandbox={window:win,document:doc,Window,Element,HTMLElement:Element,HTMLAnchorElement:class extends Element{},
+  navigator:{userAgent:'test'},performance:{now:()=>time},console,
+  innerHeight:900,innerWidth:1280,matchMedia:win.matchMedia.bind(win),addEventListener:win.addEventListener.bind(win),
+  requestAnimationFrame:fn=>{frames.set(++nextFrame,fn);return nextFrame;},cancelAnimationFrame:id=>frames.delete(id),
+  ResizeObserver:class{observe(){}disconnect(){}},MutationObserver:class{observe(){}},
+  setTimeout:()=>1,clearTimeout(){},CustomEvent:class{constructor(type,options){this.type=type;Object.assign(this,options);}},
+  getComputedStyle:()=>({scrollPaddingTop:'0',scrollPaddingLeft:'0',scrollMarginLeft:'0',scrollMarginTop:'0'})};
+ Object.defineProperty(sandbox,'scrollY',{get:()=>win.scrollY});
+ const context=vm.createContext(sandbox);
+ vm.runInContext(readFileSync(new URL('../dist/vendor/lenis-1.3.27.min.js',import.meta.url),'utf8'),context);
+ const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').split('const menuButton')[0];vm.runInContext(app,context);
+ const evaluate=code=>vm.runInContext(code,context);
+ function advance(count=1){for(let i=0;i<count;i++){time+=1000/60;const batch=[...frames.values()];frames.clear();batch.forEach(callback=>callback(time));}}
+ function wheel(deltaY,deltaX=0,deltaMode=0){
+  const event={type:'wheel',deltaY,deltaX,deltaMode,target:grid,cancelable:true,preventDefault(){this.defaultPrevented=true;},stopPropagation(){this.stopped=true;},stopImmediatePropagation(){this.stopped=true;},composedPath:()=>[grid,body,root,doc,win]};
+  win.fire(event,true);if(!event.stopped)grid.fire(event);if(!event.stopped)win.fire(event);return event;
+ }
+ return {advance,wheel,evaluate,grid,win};
+}
+
+test('vertical input remains vertical until the cards reach the center',()=>{
+ const app=boot();app.wheel(100);app.advance(45);
+ assert.equal(app.grid.scrollLeft,0);assert.ok(app.win.scrollY>650);assert.ok(app.win.scrollY<app.evaluate('carouselPinY'));
+});
+test('crossing the card center pins the page and accumulates horizontal wheel distance',()=>{
+ const app=boot();app.wheel(400);app.advance(40);
+ const pin=app.evaluate('carouselPinY');assert.equal(app.win.scrollY,pin);
+ app.wheel(120);app.advance(2);app.wheel(120);app.advance(2);
+ assert.equal(app.evaluate('railScroll.targetScroll'),300);
+ const released=app.grid.scrollLeft;app.advance(8);
+ assert.ok(app.grid.scrollLeft>released,'rail continues moving after wheel input ends');assert.equal(app.win.scrollY,pin);
+});
+test('both boundaries hand outward wheel input back to the page',()=>{
+ const app=boot();app.wheel(400);app.advance(40);
+ const pin=app.evaluate('carouselPinY');app.evaluate('scrollCarouselTo(carouselLimit,true)');
+ app.wheel(120);app.advance(30);assert.ok(app.win.scrollY>pin);
+ app.wheel(-500);app.advance(40);assert.equal(app.win.scrollY,pin);
+ app.evaluate('scrollCarouselTo(0,true)');app.wheel(-120);app.advance(30);assert.ok(app.win.scrollY<pin);
+});
+test('outward horizontal touchpad input becomes vertical motion at the end',()=>{
+ const app=boot();app.wheel(400);app.advance(40);app.evaluate('scrollCarouselTo(carouselLimit,true)');
+ const y=app.win.scrollY;app.wheel(0,160);app.advance(20);assert.ok(app.win.scrollY>y);
+});
+test('line wheel units match pixel units and fractional touchpad deltas are retained',()=>{
+ const app=boot();app.wheel(400);app.advance(40);app.wheel(3,0,1);
+ assert.equal(app.evaluate('railScroll.targetScroll'),62.5);
+ app.wheel(.2);assert.equal(app.evaluate('railScroll.targetScroll'),62.75);
+});
