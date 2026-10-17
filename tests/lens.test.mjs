@@ -236,8 +236,9 @@ test('showcase plays previews inside the hovered thumbnail and keeps the control
  assert.doesNotMatch(showcaseGpuSource,/STORYBOARD · MUTED/);
  assert.match(showcaseGpuSource,/VIDEO UNAVAILABLE/);
  assert.match(showcaseGpuSource,/rounded\(ctx,v\.x,v\.y,v\.w,v\.h,18\);ctx\.clip\(\)/);
- assert.match(showcaseGpuSource,/ctx\.lineWidth=stroke;rounded\(ctx,v\.x\+stroke\/2,v\.y\+stroke\/2,v\.w-stroke,v\.h-stroke,18\)/);
+ assert.match(showcaseGpuSource,/ctx\.lineWidth=stroke;rounded\(ctx,v\.x-gap\+stroke\/2,v\.y-gap\+stroke\/2,v\.w\+gap\*2-stroke,v\.h\+gap\*2-stroke,24\)/);
  const showcaseCss=readFileSync(new URL('../dist/showcase.css',import.meta.url),'utf8');
- assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(\.99\)\}/);
- assert.match(showcaseCss,/inset:0;border-radius:18px;padding:1\.25px/);
+ assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(\.997\)\}/);
+ assert.match(showcaseCss,/inset:-6px;border-radius:24px;padding:1\.25px/);
+ assert.match(showcaseCss,/transition:transform \.32s ease-in-out/);
 });
