@@ -31,9 +31,9 @@
 .showcase-grid[data-view="grid"] .work-visual,
 .showcase-grid[data-view="grid"] .work-cover{border-radius:12px}
 .showcase-grid[data-view="grid"] .work-visual::after{border-radius:15px}
-.showcase-grid[data-view="grid"] .work-caption{font-size:clamp(22px,13cqw,42px)}
+.showcase-grid[data-view="grid"] .work-caption{font-size:clamp(22px,2.4vw,42px);font-size:clamp(22px,13cqw,42px)}
 .showcase-grid[data-view="grid"] .work-meta{min-height:80px;padding:16px 4px 8px}
-.showcase-grid[data-view="grid"] .work-meta h3{font-size:clamp(15px,7cqw,20px);line-height:1.25}
+.showcase-grid[data-view="grid"] .work-meta h3{font-size:17px;font-size:clamp(15px,7cqw,20px);line-height:1.25}
 .showcase-grid[data-view="grid"] .work-meta p{font-size:12px;line-height:1.45;margin-top:7px}
 .showcase-grid[data-view="grid"]+.carousel-navigation{display:none}
 @media(max-width:1100px){.showcase-grid[data-view="grid"]{grid-template-columns:repeat(3,minmax(0,1fr))}}

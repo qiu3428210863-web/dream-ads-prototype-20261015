@@ -64,7 +64,7 @@ html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
 .work-cover::after{background:linear-gradient(0deg,#00000008,transparent 70%)}
 .showcase-grid .work-product{opacity:.9;filter:grayscale(1);will-change:transform}
 .showcase-grid .cover-wordmark{filter:none}
-.showcase-grid .work-visual .work-caption{color:var(--arena-ink);background:none;-webkit-text-fill-color:currentColor;filter:drop-shadow(1px 3px 0 #ffffffa6);text-shadow:none}
+.showcase-grid .work-visual .work-caption{color:var(--arena-ink);background:none;-webkit-text-fill-color:currentColor;filter:none;text-shadow:none;transform:rotate(-4deg)}
 .showcase-grid .work-meta h3{color:var(--arena-ink)}
 .showcase-grid .work-meta p{color:#7c7c7c}
 .work-visual::after{background:linear-gradient(164deg,var(--arena-pink),#cd009b)}
@@ -72,7 +72,7 @@ html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
 .disc-art,.work-disc.lifestyle .disc-art,.work-disc.tech .disc-art{background:var(--arena-card)}
 .disc-art img{filter:grayscale(1)}
 .crt-glass::before{background:radial-gradient(ellipse 76% 86% at 50% 50%,transparent 64%,#0000001a 80%,#000000a6 100%),linear-gradient(90deg,#00000075,transparent 4%,transparent 96%,#00000075),linear-gradient(0deg,#00000047,transparent 6%,transparent 94%,#00000047)}
-@media(hover:hover){.work-open:hover .work-meta h3{color:var(--arena-action)}}
+@media(hover:hover){.work-open:hover .work-meta h3{color:var(--arena-action)}.showcase-grid .work-open:hover .work-caption{transform:rotate(-4deg) translateY(-2px)}}
 @media(min-width:1700px){.showcase-grid .work-card{flex-basis:560px}}
 @media(max-width:1100px){.showcase-grid .work-card{flex-basis:clamp(300px,46vw,500px)}}
 @media(max-width:700px){
