@@ -8,6 +8,7 @@ const crtSource=readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8');
 const showcaseGpuSource=readFileSync(new URL('../dist/showcase-gpu.js',import.meta.url),'utf8');
 const showcaseQualitySource=readFileSync(new URL('../dist/showcase-quality.js',import.meta.url),'utf8');
 const appSource=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+const arenaThemeSource=readFileSync(new URL('../dist/arena-theme.css',import.meta.url),'utf8');
 function model(){const context=vm.createContext({Uint8ClampedArray,Math});vm.runInContext(modelSource,context);return context.DreamLens;}
 
 test('lens bends the screen perimeter while keeping its center fixed',()=>{
@@ -203,6 +204,20 @@ test('GPU showcase requests mipmaps, anisotropic filtering, and high-quality Can
  assert.match(showcaseGpuSource,/TEXTURE_MAX_ANISOTROPY_EXT/);
  assert.match(showcaseGpuSource,/imageSmoothingQuality='high'/);
  assert.match(showcaseGpuSource,/textRendering='geometricPrecision'/);
+});
+
+test('GPU showcase rect normalization supplies both Canvas and gradient coordinate names',()=>{
+ assert.match(showcaseGpuSource,/function box\(rect\)\{return \{left:rect\.left,top:rect\.top,width:rect\.width,height:rect\.height,x:rect\.left,y:rect\.top,w:rect\.width,h:rect\.height\};\}/);
+ assert.match(showcaseGpuSource,/anisotropy=gl\.getExtension/);
+ assert.doesNotMatch(showcaseGpuSource,/const anisotropy=gl\.getExtension/);
+});
+
+test('high-frequency halftone hero background is softened and its frame edges fade out',()=>{
+ assert.match(arenaThemeSource,/\.hero-backdrop\{[\s\S]*filter:grayscale\(1\) blur\(1\.6px\)/);
+ assert.match(arenaThemeSource,/mask-image:linear-gradient\(to right,[\s\S]*mask-composite:intersect/);
+ assert.match(arenaThemeSource,/--arena-divider:#292929/);
+ assert.match(arenaThemeSource,/\.details,\.brief-list>div,\.steps,\.step,\.faq-list details\{border-color:var\(--arena-divider\)\}/);
+ assert.match(arenaThemeSource,/\.faq-list details:first-child\{border-top-color:var\(--arena-divider\)\}/);
 });
 
 test('showcase plays previews inside the hovered thumbnail and keeps the controlled modal player',()=>{

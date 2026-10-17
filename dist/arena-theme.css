@@ -2,7 +2,7 @@
 :root{
  --arena-page:#090909;--arena-white:#fff;--arena-card:#f3f5f4;
  --arena-plot:#f4f4f5;--arena-ink:#f5f5f5;--arena-muted:#a2a2a2;
- --arena-border:#373737;--arena-pink:#ff82db;--arena-action:#cd009b;
+ --arena-border:#373737;--arena-divider:#292929;--arena-pink:#ff82db;--arena-action:#cd009b;
  --arena-plum:#470c43;--arena-green:#bfe6bc;--arena-cyan:#9de9f6;
 }
 body,.crt-surface{background:var(--arena-page);color:var(--arena-ink)}
@@ -17,6 +17,8 @@ p{color:var(--arena-muted)}
 .button.light,.icon-button,.quick-facts,.brief-panel,.step{background:#fff;border-color:var(--arena-border)}
 .button.light:hover,.icon-button:hover{background:var(--arena-card)}
 .text-button:hover,.footer a:hover,.footer button:hover{color:var(--arena-action)}
+.details,.brief-list>div,.steps,.step,.faq-list details{border-color:var(--arena-divider)}
+.faq-list details:first-child{border-top-color:var(--arena-divider)}
 .header,.mobile-nav{background:#fff;border-color:var(--arena-border)}
 .hero{background:var(--arena-page)}
 .art-orbit{background:radial-gradient(circle at 40% 30%,#fff,#fff5fc 35%,var(--arena-pink) 75%,#fb23c2);box-shadow:inset -8px -10px 40px #cd009b20,0 20px 65px #ff82db33}
@@ -72,6 +74,17 @@ html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
 .disc-art,.work-disc.lifestyle .disc-art,.work-disc.tech .disc-art{background:var(--arena-card)}
 .disc-art img{filter:grayscale(1)}
 .crt-glass::before{background:radial-gradient(ellipse 76% 86% at 50% 50%,transparent 64%,#0000001a 80%,#000000a6 100%),linear-gradient(90deg,#00000075,transparent 4%,transparent 96%,#00000075),linear-gradient(0deg,#00000047,transparent 6%,transparent 94%,#00000047)}
+/* The hero source is a dense halftone raster. Soften its screen-frequency dots before
+   the CRT warp and fade its hard box edge into the page background. */
+.hero-backdrop{
+ transform:scale(1.025);
+ filter:grayscale(1) blur(1.6px);
+ opacity:.28;
+ -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 6%,#000 94%,transparent 100%),linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
+ -webkit-mask-composite:source-in;
+ mask-image:linear-gradient(to right,transparent 0%,#000 6%,#000 94%,transparent 100%),linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
+ mask-composite:intersect;
+}
 @media(hover:hover){.work-open:hover .work-meta h3{color:var(--arena-action)}.showcase-grid .work-open:hover .work-caption{transform:rotate(-4deg) translateY(-2px)}}
 @media(min-width:1700px){.showcase-grid .work-card{flex-basis:560px}}
 @media(max-width:1100px){.showcase-grid .work-card{flex-basis:clamp(300px,46vw,500px)}}

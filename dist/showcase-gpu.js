@@ -38,14 +38,14 @@
   color=vec4(red.r,center.g,blue.b,center.a)*coverage;
  }`;
  function shader(type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(value));return value;}
- let program,texture,vao,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,transitionEnd=0,active=false,failed=false,suspended=false;
+ let program,texture,vao,anisotropy,uniformSize,uniformCurvature,uniformChromatic,dirty=true,lastX=NaN,lastY=NaN,resizeToken=0,raf=0,hoverRaf=0,transitionEnd=0,active=false,failed=false,suspended=false;
  try{
   program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
   if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
   gl.useProgram(program);vao=gl.createVertexArray();gl.bindVertexArray(vao);texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-  const anisotropy=gl.getExtension('EXT_texture_filter_anisotropic')||gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic')||gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+  anisotropy=gl.getExtension('EXT_texture_filter_anisotropic')||gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic')||gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
   if(anisotropy){const maximum=gl.getParameter(anisotropy.MAX_TEXTURE_MAX_ANISOTROPY_EXT)||1;gl.texParameterf(gl.TEXTURE_2D,anisotropy.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,maximum));}
   uniformSize=gl.getUniformLocation(program,'uOutputSize');uniformCurvature=gl.getUniformLocation(program,'uCurvature');uniformChromatic=gl.getUniformLocation(program,'uChromaticStrength');
   gl.uniform1i(gl.getUniformLocation(program,'uScene'),0);gl.uniform1f(uniformCurvature,window.DreamLens?.curvature??.16);gl.uniform1f(uniformChromatic,.8);
@@ -53,7 +53,7 @@
  function rounded(c,x,y,w,h,r){
   r=Math.max(0,Math.min(r,w/2,h/2));c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();
  }
- function box(rect){return {x:rect.left,y:rect.top,w:rect.width,h:rect.height};}
+ function box(rect){return {left:rect.left,top:rect.top,width:rect.width,height:rect.height,x:rect.left,y:rect.top,w:rect.width,h:rect.height};}
  function drawImage(image,rect,filter='none'){
   if(!image?.complete||!image.naturalWidth||rect.width<1||rect.height<1)return;
   ctx.save();ctx.filter=filter;ctx.drawImage(image,rect.left,rect.top,rect.width,rect.height);ctx.restore();
