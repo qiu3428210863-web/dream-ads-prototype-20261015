@@ -6,6 +6,7 @@ import {readFileSync,existsSync} from 'node:fs';
 const modelSource=readFileSync(new URL('../dist/lens-model.js',import.meta.url),'utf8');
 const crtSource=readFileSync(new URL('../dist/crt.js',import.meta.url),'utf8');
 const showcaseGpuSource=readFileSync(new URL('../dist/showcase-gpu.js',import.meta.url),'utf8');
+const appSource=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 function model(){const context=vm.createContext({Uint8ClampedArray,Math});vm.runInContext(modelSource,context);return context.DreamLens;}
 
 test('lens bends the screen perimeter while keeping its center fixed',()=>{
@@ -179,4 +180,17 @@ test('GPU showcase paint matches the light page palette instead of the retired b
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(text\.toUpperCase\(\)/);
  assert.match(showcaseGpuSource,/ctx\.fillStyle='#171817';ctx\.fillText\(title\.innerText/);
  assert.doesNotMatch(showcaseGpuSource,/ctx\.fillStyle='#090909'/);
+});
+
+test('showcase player removes the highlights strip and provides controlled muted previews with failure feedback',()=>{
+ const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
+ assert.doesNotMatch(html,/class="quick-facts/);
+ for(const id of ['preview-video','preview-play','preview-seek','preview-mute','preview-volume','preview-fullscreen','preview-status'])assert.match(html,new RegExp(`id="${id}"`));
+ assert.match(html,/href="player\.css"/);
+ assert.match(appSource,/stopHoverPreviews\(card\)/);
+ assert.match(appSource,/media\.muted=true/);
+ assert.match(appSource,/previewVideo\.onerror=showMediaError/);
+ assert.match(appSource,/addEventListener\('input'/);
+ assert.match(appSource,/No video file attached/);
+ assert.match(showcaseGpuSource,/paintMiniPlayer/);
 });
