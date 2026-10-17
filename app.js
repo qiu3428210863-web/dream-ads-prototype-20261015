@@ -87,7 +87,7 @@ function setShowcaseView(view){
     {transform:'translate(0,0) scale(.78)',offset:.55},
     {transform:'translate(0,0) scale(1.045)',offset:.8},
     {transform:'translate(0,0) scale(1)',offset:1}
-   ],{duration:960,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
+   ],{duration:860,easing:'cubic-bezier(.22,.7,.26,1)',fill:'none'});
   });
   const batch=viewAnimations;let remaining=batch.length;
   batch.forEach(animation=>{animation.onfinish=()=>{
