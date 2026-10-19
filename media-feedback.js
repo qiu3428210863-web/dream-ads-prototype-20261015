@@ -17,13 +17,13 @@
    if(isPreview)document.dispatchEvent(new CustomEvent('dream:preview-media-failed',{detail:{reason}}));
    if(isHero){video.classList.add?.('is-switching');document.querySelector?.('.hero-video-poster')?.classList.add?.('is-visible');}
    if(isStep){video.classList.add('is-media-failed');stepVideo.style.backgroundImage=video.poster?'url("'+video.poster+'")':'';}
-   if(isWork){video.classList.add('is-media-failed');workCard?.classList.remove('has-video-source','is-previewing');}
+   if(isWork){video.classList.add('is-media-failed');workCard?.classList.remove('has-video-source','is-previewing','is-hover-ready');}
   };
   const failed=(text,reason='error',action='Try again')=>{retry.textContent=action;state('error',text);fallback(reason);};
   const loading=()=>{state('loading','Loading video\u2026');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&!isHero&&video.paused)){clear();return;}video.pause();failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video is taking too long to load. Check your connection, then try again.','timeout');},15000);};
   video.addEventListener('loadstart',()=>{if(isPreview||isHero||!video.paused)loading();});
   video.addEventListener('waiting',loading);video.addEventListener('stalled',()=>{if(!video.paused)loading();});
-  video.addEventListener('playing',()=>{video.classList.remove('is-media-failed');if(isStep)stepVideo.style.backgroundImage='';if(isWork)workCard?.classList.add('has-video-source','is-previewing');state('ready','');});
+  video.addEventListener('playing',()=>{video.classList.remove('is-media-failed');if(isStep)stepVideo.style.backgroundImage='';if(isWork)workCard?.classList.add('has-video-source','is-previewing','is-hover-ready');state('ready','');});
   video.addEventListener('ended',()=>state('ready',''));
   video.addEventListener('pause',clear);
   video.addEventListener('error',()=>failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video could not play. Check your connection, then try again.'));

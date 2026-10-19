@@ -1,0 +1,15 @@
+/* Intrinsic gallery geometry; loading messages never participate in grid sizing. */
+#showcase-grid[data-view="grid"]{align-items:start;align-content:start;grid-auto-rows:auto;row-gap:32px}
+#showcase-grid .work-card{height:auto;min-height:0;align-self:start}
+#showcase-grid .work-open{height:auto;min-height:0}
+#showcase-grid .work-meta{min-height:0;height:auto;padding:12px 4px 10px}
+#showcase-grid .work-card>.media-feedback{position:absolute;inset:10px 10px auto;margin:0;z-index:9}
+#showcase-grid .work-visual,#showcase-grid .work-cover{transform:none!important;transition:none}
+#showcase-grid .work-cover{background:var(--ui-surface)!important}
+#showcase-grid .work-product.work-poster{animation:none!important;transform:scale(1)!important;transition:transform .32s ease-out}
+@media(hover:hover){#showcase-grid .work-card:hover .work-product.work-poster{transform:scale(1.025)!important}}
+#showcase-grid .work-hover-video{opacity:0;background:transparent;transition:none}
+#showcase-grid .work-card.is-previewing.is-hover-ready .work-hover-video{opacity:1}
+@media(prefers-reduced-motion:reduce){#showcase-grid .work-product.work-poster{transition:none}}
+/* Suppress every original surface while the curved copy is visible, in either theme. */
+html.showcase-gpu-active #showcase-grid :is(.work-card,.work-open,.work-visual,.work-cover){background:transparent!important;box-shadow:none!important}

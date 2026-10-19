@@ -48,11 +48,11 @@
 /* Keep thumbnails image-led and reveal each gallery row as it enters the viewport. */
 #showcase-grid .cover-wordmark,#showcase-grid .work-caption{display:none!important}
 .showcase-grid[data-view="grid"].has-row-reveal .work-card{
- opacity:0;transform:perspective(1000px) rotateX(16deg) translateY(24px) scale(.96);transform-origin:center top;
+ opacity:0;transform:translateY(20px);transform-origin:center top;
  transition:opacity .48s ease-out,transform .72s cubic-bezier(.18,.78,.18,1);
  transition-delay:calc(var(--row-card-index,0)*55ms);will-change:opacity,transform;
 }
-.showcase-grid[data-view="grid"].has-row-reveal .work-card.is-row-revealed{opacity:1;transform:perspective(1000px) rotateX(0) translateY(0) scale(1)}
+.showcase-grid[data-view="grid"].has-row-reveal .work-card.is-row-revealed{opacity:1;transform:translateY(0)}
 /* Section titles and the content beneath the full gallery rise in when they enter view. */
 html.has-content-reveal .content-reveal-target{opacity:0;translate:0 24px;transition:opacity .56s ease-out,translate .72s cubic-bezier(.18,.78,.18,1);transition-delay:var(--content-reveal-delay,0ms);will-change:opacity,translate}
 html.has-content-reveal .content-reveal-target.is-content-revealed{opacity:1;translate:0 0}
