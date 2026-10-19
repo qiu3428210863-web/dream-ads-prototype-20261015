@@ -30,3 +30,12 @@ test('an old decoded frame cannot reveal a newly selected video',()=>{
  const h=harness();h.context.select(0);h.video.paused=false;h.context.reveal('clip-a');h.context.select(1);h.frames.shift()();
  assert.equal(h.video.classList.contains('is-switching'),true);
 });
+
+test('hero poster and video share unconstrained cover geometry despite the global responsive-image rule',()=>{
+ const css=readFileSync(new URL('../dist/hero-viewport.css',import.meta.url),'utf8');
+ const shared=css.match(/\.hero-video-poster,\.hero-video\{([^}]+)\}/)?.[1]||'';
+ assert.match(shared,/width:108%/);
+ assert.match(shared,/height:108%/);
+ assert.match(shared,/max-width:none/,'the image must not inherit img{max-width:100%}: at left -4% it leaves a ~3% right-hand gap');
+ assert.match(shared,/object-fit:cover/);
+});

@@ -13,11 +13,12 @@
  isolation:isolate;overflow:hidden;background:#090909;color:#fff;
 }
 .hero-video-poster,.hero-video{
- position:absolute;inset:-4%;width:108%;height:108%;min-width:0;min-height:0;
+ position:absolute;inset:-4%;width:108%;height:108%;min-width:0;min-height:0;max-width:none;max-height:none;
  object-fit:cover;object-position:center center;transform:scale(1.02);transform-origin:center;
  pointer-events:none;
 }
-/* Keep media opaque: dim the pixels, never blend a moving frame with a poster. */
+/* Override global img max-width so poster and video share the same cover box.
+   The poster is exclusive while loading; the playing video retains its authored 87% opacity. */
 .hero-video-poster{z-index:0;opacity:0;visibility:hidden;filter:brightness(.8);transition:none}
 .hero-video-poster.is-visible{opacity:1;visibility:visible}
 .hero-video{z-index:1;opacity:.87;filter:brightness(.8);transition:none}
