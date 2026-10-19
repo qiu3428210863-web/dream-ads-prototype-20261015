@@ -1,6 +1,13 @@
 /* Keep recovery beside the player and preserve its poster when media stalls. */
 (()=>{
  const bindings=new WeakMap();
+ // One vector and timing model for native players and the desktop GPU card copy.
+ let ringLength=200;
+ const ringPath='M8 15 C8 12 10 11 13 13 L49 42 C64 55 91 47 91 29 C91 11 71 4 57 16 L14 48 C11 50 8 49 8 46 Z';
+ globalThis.DreamMediaLoader={draw(ctx,rect,now,reduced){
+  const size=Math.min(68,rect.width*.23),scale=size/100,x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+  ctx.save();ctx.translate(x,y);ctx.fillStyle='#101014b8';ctx.beginPath();ctx.arc(0,0,size*.65,0,Math.PI*2);ctx.fill();ctx.scale(scale,scale);ctx.translate(-50,-30);ctx.lineWidth=6;ctx.lineJoin='round';ctx.lineCap='round';const path=new Path2D(ringPath);ctx.strokeStyle='#ffffff66';ctx.stroke(path);ctx.strokeStyle='#fff';ctx.setLineDash(reduced?[]:[ringLength*.37,ringLength*.63]);ctx.lineDashOffset=reduced?0:-(now%1400)/1400*ringLength;ctx.stroke(path);ctx.restore();
+ }};
  function bind(video){
   if(bindings.has(video))return;
   const isPreview=video.id==='preview-video',isHero=video.matches('.hero-video'),stepVideo=video.closest('.challenge-step-video'),stepCard=video.closest('.challenge-step-card'),isStep=Boolean(stepVideo),workCard=video.closest('.work-card'),isWork=video.matches('.work-hover-video');
@@ -10,9 +17,14 @@
   const box=document.createElement('div'),message=document.createElement('p'),retry=document.createElement('button');
   box.className='media-feedback';box.hidden=true;box.dataset.state='ready';
   retry.type='button';retry.textContent='Try again';box.append(message,retry);host.append(box);
+  const frame=isPreview?document.querySelector('.preview-stage'):isHero?host:stepVideo||video.closest('.work-visual')||host;
+  frame.querySelectorAll(':scope > .media-loader').forEach(node=>node.remove());
+  const loader=document.createElement('span');loader.className='media-loader';loader.hidden=true;loader.setAttribute('role','status');loader.setAttribute('aria-label','Loading video');loader.setAttribute('translate','no');
+  loader.innerHTML='<svg viewBox="0 0 100 60" aria-hidden="true"><path class="media-loader-track" d="'+ringPath+'"/><path class="media-loader-ring" pathLength="200" d="'+ringPath+'"/></svg>';
+  frame.append(loader);ringLength=loader.querySelector('path')?.getTotalLength?.()||ringLength;
   let timer=0;
   const clear=()=>{clearTimeout(timer);timer=0;};
-  const state=(value,text)=>{clear();box.dataset.state=value;video.dataset.feedbackState=value;if(message.textContent!==text)message.textContent=text;box.hidden=value==='ready';retry.hidden=value==='loading';retry.disabled=value==='loading';video.setAttribute('aria-busy',String(value==='loading'));box.setAttribute('role',value==='error'?'alert':'status');box.setAttribute('aria-live',value==='error'?'assertive':'polite');};
+  const state=(value,text)=>{clear();box.dataset.state=value;video.dataset.feedbackState=value;if(message.textContent!==text)message.textContent=text;box.hidden=value!=='error';loader.hidden=value!=='loading';document.dispatchEvent(new CustomEvent('dream:media-state',{detail:{video,state:value}}));retry.hidden=value==='loading';retry.disabled=value==='loading';video.setAttribute('aria-busy',String(value==='loading'));box.setAttribute('role',value==='error'?'alert':'status');box.setAttribute('aria-live',value==='error'?'assertive':'polite');};
   const fallback=reason=>{
    if(isPreview)document.dispatchEvent(new CustomEvent('dream:preview-media-failed',{detail:{reason}}));
    if(isHero){video.classList.add?.('is-switching');document.querySelector?.('.hero-video-poster')?.classList.add?.('is-visible');}
@@ -20,12 +32,14 @@
    if(isWork){video.classList.add('is-media-failed');workCard?.classList.remove('has-video-source','is-previewing','is-hover-ready');}
   };
   const failed=(text,reason='error',action='Try again')=>{retry.textContent=action;state('error',text);fallback(reason);};
-  const loading=()=>{state('loading','Loading video\u2026');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&!isHero&&video.paused)){clear();return;}video.pause();failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video is taking too long to load. Check your connection, then try again.','timeout');},15000);};
+  const loading=()=>{state('loading','Loading video\u2026');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&!isHero&&video.paused)){state('ready','');return;}video.pause();failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video is taking too long to load. Check your connection, then try again.','timeout');},15000);};
   video.addEventListener('loadstart',()=>{if(isPreview||isHero||!video.paused)loading();});
   video.addEventListener('waiting',loading);video.addEventListener('stalled',()=>{if(!video.paused)loading();});
   video.addEventListener('playing',()=>{video.classList.remove('is-media-failed');if(isStep)stepVideo.style.backgroundImage='';if(isWork)workCard?.classList.add('has-video-source','is-previewing','is-hover-ready');state('ready','');});
   video.addEventListener('ended',()=>state('ready',''));
-  video.addEventListener('pause',clear);
+  video.addEventListener('pause',()=>{clear();if(box.dataset.state==='loading')state('ready','');});
+  video.addEventListener('emptied',()=>state('ready',''));
+  video.addEventListener('play',()=>{if(video.readyState<3)loading();});
   video.addEventListener('error',()=>failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video could not play. Check your connection, then try again.'));
   video.addEventListener('dream:play-rejected',event=>{if(event.detail?.name==='AbortError')return;const blocked=event.detail?.name==='NotAllowedError';retry.textContent=blocked?'Play video':'Try again';failed(blocked?'Playback needs your permission. Select Play video to start.':'Video could not play. Try again.',blocked?'permission':'play',blocked?'Play video':'Try again');});
   retry.addEventListener('click',()=>{
@@ -34,7 +48,7 @@
    if(isStep){video.classList.remove('is-media-failed');stepVideo.style.backgroundImage='';retry.textContent='Try again';loading();video.load();stepCard?.querySelector('.challenge-step-button')?.click();return;}
    if(isWork){const button=workCard?.querySelector('[data-preview]'),src=button?.dataset.previewVideoSrc||button?.dataset.videoSrc;if(src){video.classList.remove('is-media-failed');video.src=src;video.dataset.loadedSource=src;workCard.classList.add('has-video-source','is-previewing');}retry.textContent='Try again';loading();video.load();video.play().catch(error=>video.dispatchEvent(new CustomEvent('dream:play-rejected',{detail:{name:error.name}})));}
   });
-  if(isWork)host.addEventListener('pointerleave',()=>{if(box.dataset.state==='error'){state('ready','');video.classList.remove('is-media-failed');}});
+  if(isWork)host.addEventListener('pointerleave',()=>{if(box.dataset.state!=='ready'){state('ready','');video.classList.remove('is-media-failed');}});
   bindings.set(video,{box,clear});
   if(video.error)failed('Video could not play. Check your connection, then try again.');else if(video.readyState<3&&!video.paused)loading();
  }

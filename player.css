@@ -96,3 +96,16 @@ html.showcase-gpu-active .work-card.is-previewing .work-visual::before{display:n
 @keyframes media-feedback-spin{to{transform:rotate(360deg)}}
 @media(max-width:520px){.media-feedback{grid-template-columns:minmax(0,1fr);gap:12px;padding:14px;border-radius:14px}.media-feedback p{font-size:15px}.media-feedback button{width:100%;min-height:48px}.media-feedback[data-state="loading"]{grid-template-columns:16px minmax(0,1fr)}.preview-player>.media-feedback{margin-top:8px}.hero>.media-feedback{inset:calc(var(--app-header-height,64px) + 10px) 10px auto auto;width:min(360px,calc(100% - 20px));padding:11px 12px}.hero>.media-feedback button{width:auto;min-width:96px}.challenge-step-card>.media-feedback{inset:8px 8px auto;padding:10px;gap:8px}.challenge-step-card>.media-feedback button{width:auto;min-width:88px}}
 @media(prefers-reduced-motion:reduce){.media-feedback[data-state="loading"]:before{animation:none}}
+
+/* Frame-local Möbius buffering indicator. No layout movement or intercepted clicks. */
+.media-loader{position:absolute;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none}
+.media-loader[hidden],.media-feedback[hidden]{display:none!important}
+.media-loader:before{content:"";position:absolute;left:50%;top:50%;width:min(88px,30%);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:#101014b8}
+.media-loader svg{position:relative;width:min(68px,23%);height:auto;overflow:visible;fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.media-loader-track{stroke:#ffffff66}
+.media-loader-ring{stroke:#fff;stroke-dasharray:74 126;animation:media-mobius-flow 1.4s linear infinite}
+.hero>.media-loader{z-index:3}
+.challenge-step-video,.work-visual{position:relative}
+html.showcase-gpu-active .showcase-grid .media-loader{opacity:0}
+@keyframes media-mobius-flow{to{stroke-dashoffset:-200}}
+@media(prefers-reduced-motion:reduce){.media-loader-ring{animation:none;stroke-dasharray:none}}
