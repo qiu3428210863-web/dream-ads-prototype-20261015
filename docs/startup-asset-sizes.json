@@ -1,0 +1,144 @@
+{
+  "workflow": [
+    {
+      "name": "challenge-step-01.webp",
+      "input_bytes": 76348,
+      "webp_bytes": 40182
+    },
+    {
+      "name": "challenge-step-02.webp",
+      "input_bytes": 155945,
+      "webp_bytes": 93048
+    },
+    {
+      "name": "challenge-step-03.webp",
+      "input_bytes": 54461,
+      "webp_bytes": 27404
+    }
+  ],
+  "posters": [
+    {
+      "id": "openart-activewear",
+      "poster_bytes": 27780
+    },
+    {
+      "id": "openart-orange-soda",
+      "poster_bytes": 16816
+    },
+    {
+      "id": "openart-energy-drink",
+      "poster_bytes": 20932
+    },
+    {
+      "id": "openart-pink-fashion",
+      "poster_bytes": 5130
+    },
+    {
+      "id": "openart-fox-film",
+      "poster_bytes": 8842
+    },
+    {
+      "id": "openart-comtex-tennis",
+      "poster_bytes": 15208
+    },
+    {
+      "id": "openart-handmade-bag",
+      "poster_bytes": 6832
+    },
+    {
+      "id": "openart-mochi-maker",
+      "poster_bytes": 4596
+    },
+    {
+      "id": "openart-four-star-oats",
+      "poster_bytes": 21368
+    },
+    {
+      "id": "openart-diesel",
+      "poster_bytes": 8502
+    },
+    {
+      "id": "openart-koko-eyewear",
+      "poster_bytes": 4012
+    },
+    {
+      "id": "openart-camera-story",
+      "poster_bytes": 8996
+    },
+    {
+      "id": "openart-emily-portrait",
+      "poster_bytes": 14862
+    },
+    {
+      "id": "openart-emily-brand-film",
+      "poster_bytes": 7358
+    },
+    {
+      "id": "openart-headphone-promo",
+      "poster_bytes": 8288
+    },
+    {
+      "id": "openart-calm-in-ear",
+      "poster_bytes": 25454
+    },
+    {
+      "id": "openart-maheen-product-story",
+      "poster_bytes": 8118
+    },
+    {
+      "id": "openart-maheen-brand-story",
+      "poster_bytes": 11122
+    },
+    {
+      "id": "openart-ayesha-product",
+      "poster_bytes": 4994
+    },
+    {
+      "id": "openart-maheen-social",
+      "poster_bytes": 12022
+    },
+    {
+      "id": "openart-maheen-campaign",
+      "poster_bytes": 15308
+    }
+  ],
+  "hero_streams": [
+    {
+      "id": "openart-activewear",
+      "input_bytes": 3898773,
+      "stream_bytes": 1382188
+    },
+    {
+      "id": "openart-orange-soda",
+      "input_bytes": 2057803,
+      "stream_bytes": 1519943
+    },
+    {
+      "id": "openart-energy-drink",
+      "input_bytes": 1897770,
+      "stream_bytes": 1761920
+    },
+    {
+      "id": "openart-pink-fashion",
+      "input_bytes": 2187820,
+      "stream_bytes": 1575335
+    },
+    {
+      "id": "openart-fox-film",
+      "input_bytes": 1602917,
+      "stream_bytes": 1098560
+    }
+  ],
+  "studio": [
+    {
+      "name": "creative-studio-scene",
+      "input_bytes": 2133799,
+      "webp_bytes": 164904
+    },
+    {
+      "name": "creative-studio-foreground",
+      "input_bytes": 1487340,
+      "webp_bytes": 255608
+    }
+  ]
+}

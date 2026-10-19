@@ -8,6 +8,10 @@ Website: https://qiu3428210863-web.github.io/dream-ads-prototype-20261015/
 
 This is a fictional challenge and design demonstration, not an official OpenArt registration service. Activity dates and rewards are illustrative. The form saves the draft and video only in the visitor's browser. There is no submission backend. See [commercial readiness](COMMERCIAL-READINESS.md) for outstanding launch requirements and [component guidelines](DESIGN.md) for the visual system.
 
+## Loading performance
+
+The initial hero shows a preloaded local poster before video playback. Background clips and all card posters are served locally; lower-page images and workflow media are deferred. See [loading optimization and verification](docs/startup-performance.md) for file sizes and fallback coverage.
+
 ## Run and verify
 
 Requires Node.js; no package installation is needed.

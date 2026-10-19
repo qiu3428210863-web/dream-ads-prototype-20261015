@@ -14,7 +14,7 @@
   const clear=()=>{clearTimeout(timer);timer=0;};
   const state=(value,text)=>{clear();box.dataset.state=value;video.dataset.feedbackState=value;if(message.textContent!==text)message.textContent=text;box.hidden=value==='ready';retry.hidden=value==='loading';video.setAttribute('aria-busy',String(value==='loading'));};
   const failed=()=>state('error',navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video could not load. Check your connection and try again.');
-  const loading=()=>{state('loading','Loading video…');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&video.paused)){clear();return;}video.pause();state('error','Video is taking too long to load. Try again.');},15000);};
+  const loading=()=>{state('loading','Loading video…');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&!isHero&&video.paused)){clear();return;}video.pause();state('error','Video is taking too long to load. Try again.');},15000);};
   video.addEventListener('loadstart',()=>{if(isPreview||isHero||!video.paused)loading();});
   video.addEventListener('waiting',loading);video.addEventListener('stalled',()=>{if(!video.paused)loading();});
   video.addEventListener('playing',()=>state('ready',''));video.addEventListener('ended',()=>state('ready',''));

@@ -115,14 +115,14 @@ test('showcase updates only visible dirty textures and shares bounded animation 
 test('hero repeats the actual showcase sleeves instead of the miniature Up next carousel',()=>{
  assert.match(html,/class="hero-card-rail"[\s\S]*class="showcase-grid hero-card-grid" id="hero-showcase-grid"/);
  assert.match(appSource,/heroCardGrid\.innerHTML=concepts\.slice\(0,5\)\.map\(\(c,index\)=>conceptCardMarkup\(c,index,5,true\)\)/,'the hero has its own five-card row');
- assert.match(appSource,/heroConcepts=concepts\.slice\(0,5\),heroPlaylist=heroConcepts\.map\(concept=>concept\.videoSrc\)/,'the hero video playlist follows those five cards');
- assert.match(html,/<img class="hero-video-poster" src="assets\/hero-background-poster\.jpg" alt="" aria-hidden="true"><video class="hero-video" aria-hidden="true" muted playsinline preload="auto" poster="assets\/hero-background-poster\.jpg"><\/video>/,'the hero has a separate transition poster to prevent stale video frames');
+ assert.ok(appSource.includes('heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4`,document.baseURI).href)'),'the hero follows the five locally optimized clips');
+ assert.match(html,/<img class="hero-video-poster is-visible"[^>]*src="assets\/posters\/openart-activewear\.webp"/,'the first image is visible without waiting for JavaScript');
  assert.doesNotMatch(html,/hero-background\.mp4/,'the unused background video does not compete with the first featured clip');
  assert.match(appSource,/heroVideoPoster=\$\('\.hero-video-poster'\)/,'the selected card poster is available during video transitions');
- assert.match(appSource,/heroVideo\.classList\.add\('is-switching'\);if\(heroVideoPoster&&concept\.thumbnailUrl\)\{const request=\+\+heroPosterRequest[\s\S]*heroVideoPoster\.src=concept\.thumbnailUrl/,'the old frame is hidden while the matching card image loads');
+ assert.match(appSource,/heroVideo\.classList\.add\('is-switching'\);if\(heroVideoPoster&&concept\.thumbnailUrl\)\{[\s\S]*pendingPoster=new Image\(\)/,'the old video is hidden but a ready poster remains until the candidate image loads');
  assert.match(appSource,/addEventListener\('playing',\(\)=>\{const source=heroVideo\.dataset\.playlistSrc;if\(!source\|\|heroVideo\.currentSrc!==source\)return;revealHeroVideoFrame\(source\);\}\)/,'the matching video waits for its first presented frame before replacing its image');
  assert.match(appSource,/heroCanPlay=false,heroStartupReady=false/,'hero playback waits until the first clip is ready');
- assert.match(appSource,/addEventListener\('canplay',[\s\S]*requestIdleCallback/,'initial playback starts during browser idle time after buffering');
+ assert.match(appSource,/addEventListener\('canplay',\(\)=>\{heroCanPlay=true;heroStartupReady=true;syncHeroVideo\(\);\}\)/,'the first ready video starts without an additional idle-time delay');
  assert.match(appSource,/requestVideoFrameCallback/,'progress painting follows decoded video frames');
  assert.match(appSource,/lastFallbackProgress>=1000\/30/,'older browsers limit progress painting to 30 frames per second');
  assert.match(appSource,/heroVideo\?\.addEventListener\('ended',[\s\S]*selectHeroVideo\(heroVideoIndex\+1\)/,'hero videos advance and repeat after the fifth clip');
@@ -160,10 +160,10 @@ test('hero repeats the actual showcase sleeves instead of the miniature Up next 
 });
 
 test('hero and nearby gallery videos are preloaded without eager full-page downloads',()=>{
- assert.match(appSource,/heroAheadVideo\.preload='auto'/,'one upcoming hero clip is buffered ahead');
+ assert.match(appSource,/heroAheadVideo\.preload='metadata'/,'only metadata for the upcoming clip is requested');
  assert.match(appSource,/preloadNextHeroVideo=\(\)=>\{const connection=navigator\.connection/,'preloading respects data-saving and slow-network settings');
- assert.match(appSource,/video\.preload='metadata';video\.src=source;video\.dataset\.loadedSource=source;video\.load\(\)/,'nearby gallery cards fetch video metadata before a preview is opened');
- assert.match(appSource,/\{rootMargin:'500px 0px'\}/,'gallery preloading stays close to the visible cards');
+ assert.doesNotMatch(appSource,/video\.preload='metadata';video\.src=source/,'gallery video downloads wait for actual user intent');
+ assert.match(appSource,/heroAheadTimer=setTimeout\([\s\S]*\},3000\)/,'upcoming metadata does not compete with the initial hero load');
 });
 
 test('hero background swaps the poster only after the matching video frame is presented',()=>{
@@ -275,7 +275,7 @@ test('hero copy keeps its original text layout and rises in sequence',()=>{
  assert.match(html,/<h1 id="hero-title">Make your<br><span class="pink">dream ad\.<\/span><span class="sparkle" aria-hidden="true">✳<\/span><\/h1>/,'the headline retains its original markup and spacing');
  assert.match(appSource,/function startHeroCopyEntrance\(\)[\s\S]*heroSection\.classList\.add\('is-copy-entering'\)/,'hero copy uses a container-level entrance without splitting its text');
  assert.doesNotMatch(appSource,/hero-type-char|createTreeWalker\(target/,'the hero text is no longer split into per-character elements');
- assert.match(heroCss,/\.hero\.is-copy-entering \.hero-copy h1,\.hero\.is-copy-entering \.hero-description,\.hero\.is-copy-entering \.hero-actions\{opacity:0;translate:0 22px;animation:hero-copy-rise/,'headline, description, and CTA rise into place');
+ assert.match(heroCss,/\.hero\.is-copy-entering \.hero-copy h1,\.hero\.is-copy-entering \.hero-description,\.hero\.is-copy-entering \.hero-actions\{opacity:1;translate:0 22px;animation:hero-copy-rise/,'headline, description, and CTA remain visible while rising into place');
  assert.match(heroCss,/\.hero\.is-copy-entering \.hero-description\{animation-delay:140ms\}[\s\S]*\.hero\.is-copy-entering \.hero-actions\{animation-delay:280ms\}/,'description and CTA follow the headline in sequence');
 });
 
@@ -320,11 +320,11 @@ test('browser-translated card text invalidates its visible canvas',()=>{
 });
 
 
-test('only non-text media is excluded from translation, with eagerly loaded studio layers',()=>{
+test('only non-text media is excluded from translation, with lazy-loaded studio layers',()=>{
  assert.match(html,/<html lang="en">/);
  assert.equal((html.match(/class="challenge-step-video" translate="no"/g)||[]).length,3);
  assert.match(html,/class="creative-cta-art" translate="no"/);
- for(const name of ['background','subject'])assert.match(html,new RegExp('class="creative-cta-'+name+'"[^>]*loading="eager"'));
+ for(const name of ['background','subject'])assert.match(html,new RegExp('class="creative-cta-'+name+'"[^>]*loading="lazy"'));
  assert.match(appSource,/document.addEventListener\('dream:translation-layout',refreshChallengeMedia\)/);
  assert.match(appSource,/document.addEventListener\('click',event=>\{const button=event.target.closest\('\.challenge-step-button'\)/);
 });

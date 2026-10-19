@@ -42,6 +42,8 @@ const concepts = [
  ,{id:'openart-maheen-social',theme:'tech',category:'Marketing & Advertising',title:'Made for the Scroll.',product:'Social content · Brand campaign',thumbnailUrl:'https://cdn.openart.ai/community-post-assets/282bed80bec45fcf9f7f688462c80ccb/thumbnail/0.webp',videoSrc:'https://cdn.openart.ai/community-post-assets/282bed80bec45fcf9f7f688462c80ccb/output/0.mp4',headline:'Catch the eye.\nKeep the story.',description:'A social-first marketing concept from OpenArt’s public advertising feed, edited to make the visual idea land quickly.',scenes:['Catch the eye.','Keep the story moving.','Make it stick.']}
  ,{id:'openart-maheen-campaign',theme:'beauty',category:'Marketing & Advertising',title:'A Fresh Campaign Idea.',product:'Product · Marketing film',thumbnailUrl:'https://cdn.openart.ai/community-post-assets/947ce191f1445b3ab2629618ec0da96d/thumbnail/0.webp',videoSrc:'https://cdn.openart.ai/community-post-assets/947ce191f1445b3ab2629618ec0da96d/output/0.mp4',headline:'Start with\na spark.',description:'A short campaign visual sourced from OpenArt’s Marketing and Advertising inspiration feed.',scenes:['Start with a spark.','Build the visual.','Bring the idea to life.']}
 ];
+/* Ship display posters locally; preserve original full-quality videos for explicit playback. */
+concepts.forEach(concept=>{concept.originalThumbnailUrl=concept.thumbnailUrl;concept.thumbnailUrl=`assets/posters/${concept.id}.webp`;});
 const grid = $('#showcase-grid');
 const heroCardGrid=$('#hero-showcase-grid');
 const reducedCarouselMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -60,7 +62,7 @@ function conceptCardMarkup(c,index,total,featured=false) {
  const theme=c.theme||'tech',poster=c.thumbnailUrl||`assets/${c.art}`;
  const actionLabel=featured?(c.videoSrc?`Show ${c.title} in the hero video`:`${c.title}; no video is available`):`Preview ${c.title}`;
  const featuredState=featured&&!c.videoSrc?'aria-disabled="true" tabindex="-1"':'';
- return `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${total}"><div class="work-disc ${theme}" aria-hidden="true"><div class="disc-art"><img class="${c.thumbnailUrl?'work-disc-poster':''}" src="${poster}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button type="button" class="work-open" data-preview="${c.id}" data-category="${theme}" data-video-src="${c.videoSrc||''}" data-preview-video-src="${c.videoSrc?`assets/card-previews/${c.id}.mp4`:''}" ${featured?'data-featured-card':''} aria-label="${actionLabel}" ${featuredState} draggable="false"><div class="work-visual ${theme}"><div class="work-cover"><video class="work-hover-video" muted playsinline loop preload="none" aria-hidden="true"></video><img class="work-product ${c.thumbnailUrl?'work-poster':''}" src="${poster}" alt="${c.product}" width="680" height="680" draggable="false"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`;
+ return `<article class="work-card" aria-roledescription="slide" aria-label="${index+1} of ${total}"><div class="work-disc ${theme}" aria-hidden="true"><div class="disc-art"><img loading="lazy" decoding="async" class="${c.thumbnailUrl?'work-disc-poster':''}" src="${poster}" alt="" width="680" height="680" draggable="false"></div><span class="disc-hub"></span></div><button type="button" class="work-open" data-preview="${c.id}" data-category="${theme}" data-video-src="${c.videoSrc||''}" data-preview-video-src="${c.videoSrc?`assets/card-previews/${c.id}.mp4`:''}" ${featured?'data-featured-card':''} aria-label="${actionLabel}" ${featuredState} draggable="false"><div class="work-visual ${theme}"><div class="work-cover"><video class="work-hover-video" muted playsinline loop preload="none" aria-hidden="true"></video><img loading="${featured?'eager':'lazy'}" decoding="async" fetchpriority="${featured?'auto':'low'}" class="work-product ${c.thumbnailUrl?'work-poster':''}" src="${poster}" alt="${c.product}" width="680" height="680" draggable="false"><img class="cover-wordmark" src="assets/openart-logo.svg" alt="" width="403" height="69" draggable="false"><span class="work-caption">${c.headline.replace('\n','<br>')}</span></div></div><div class="work-meta"><h3>${c.title}</h3><p>${c.product}</p></div></button></article>`;
 }
 function startHeroCopyEntrance(){
  if(!heroSection||heroMotion.matches)return;
@@ -78,7 +80,7 @@ if(heroCardGrid){
  heroCardGrid.innerHTML=concepts.slice(0,5).map((c,index)=>conceptCardMarkup(c,index,5,true)).join('');
  window.DreamCarouselInput?.bind(heroCardGrid);
  const nativeFeatured=matchMedia('(max-width:900px), (hover:none), (pointer:coarse)');
- const rail=heroCardGrid.parentElement,featuredCards=$$('.work-card',heroCardGrid),heroConcepts=concepts.slice(0,5),heroPlaylist=heroConcepts.map(concept=>concept.videoSrc).filter(Boolean);
+ const rail=heroCardGrid.parentElement,featuredCards=$$('.work-card',heroCardGrid),heroConcepts=concepts.slice(0,5),heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4`,document.baseURI).href);
  rail.classList.add('is-visible');
  startHeroCopyEntrance();startHeroCardEntrance(featuredCards,rail);
  let heroVideoIndex=0,gesture=null,suppressUntil=0,progressFrame=0,videoFrameToken=0,lastFallbackProgress=0;
@@ -90,17 +92,24 @@ if(heroCardGrid){
  const trackProgress=(now=performance.now())=>{progressFrame=0;videoFrameToken=0;if(!heroVideo||heroVideo.paused||document.hidden)return;if(heroVideo.requestVideoFrameCallback||now-lastFallbackProgress>=1000/30){lastFallbackProgress=now;const card=featuredCards[heroVideoIndex];updateFeaturedProgress(card,heroVideo);if(card&&document.documentElement.classList.contains('showcase-gpu-active'))card.dispatchEvent(new CustomEvent('dream:card-progress',{bubbles:true}));}if(heroVideo.requestVideoFrameCallback)videoFrameToken=heroVideo.requestVideoFrameCallback((time)=>trackProgress(time));else progressFrame=requestAnimationFrame(trackProgress);};
  const startProgressTracking=()=>{if(heroVideo?.requestVideoFrameCallback){if(!videoFrameToken)videoFrameToken=heroVideo.requestVideoFrameCallback((time)=>trackProgress(time));}else if(!progressFrame)progressFrame=requestAnimationFrame(trackProgress);};
  const setActiveFeatured=index=>featuredCards.forEach((card,cardIndex)=>{const active=cardIndex===index;card.classList.toggle('is-hero-active',active);card.classList.remove('has-playback-progress');card.dataset.playbackProgress='0';card.style.setProperty('--playback-progress','0%');});
- const selectHeroVideo=(index,restart=true,animateCenter=true)=>{if(!heroVideo||!heroPlaylist.length)return;heroVideoIndex=(index+heroPlaylist.length)%heroPlaylist.length;const concept=heroConcepts[heroVideoIndex],source=heroPlaylist[heroVideoIndex];heroVideo.muted=true;heroVideo.loop=false;setActiveFeatured(heroVideoIndex);rotateFeaturedCardToCenter(featuredCards[heroVideoIndex],animateCenter);if(heroVideo.dataset.playlistSrc!==source){heroVideo.pause();heroCanPlay=false;heroVideo.classList.add('is-switching');if(heroVideoPoster&&concept.thumbnailUrl){const request=++heroPosterRequest,reveal=()=>{if(request===heroPosterRequest&&heroVideo.classList.contains('is-switching'))heroVideoPoster.classList.add('is-visible');};heroVideoPoster.classList.remove('is-visible');heroVideoPoster.addEventListener('load',reveal,{once:true});heroVideoPoster.src=concept.thumbnailUrl;if(heroVideoPoster.complete&&heroVideoPoster.naturalWidth)reveal();}if(concept.thumbnailUrl)heroVideo.poster=concept.thumbnailUrl;heroVideo.dataset.playlistSrc=source;heroVideo.src=source;heroVideo.load();}else if(restart){try{heroVideo.currentTime=0;}catch{}}syncHeroVideo();};
- const heroAheadVideo=document.createElement('video');heroAheadVideo.muted=true;heroAheadVideo.playsInline=true;heroAheadVideo.preload='auto';
- const preloadNextHeroVideo=()=>{const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(connection?.saveData||['slow-2g','2g'].includes(connection?.effectiveType))return;const next=heroPlaylist[(heroVideoIndex+1)%heroPlaylist.length];if(!next||heroAheadVideo.dataset.preloadedSource===next)return;heroAheadVideo.dataset.preloadedSource=next;heroAheadVideo.src=next;heroAheadVideo.load();};
- heroVideo?.addEventListener('canplay',()=>{heroCanPlay=true;if(heroStartupReady){syncHeroVideo();return;}const start=()=>{heroStartupReady=true;syncHeroVideo();};if('requestIdleCallback'in window)requestIdleCallback(start,{timeout:900});else setTimeout(start,180);});
+ const selectHeroVideo=(index,restart=true,animateCenter=true)=>{if(!heroVideo||!heroPlaylist.length)return;heroVideoIndex=(index+heroPlaylist.length)%heroPlaylist.length;const concept=heroConcepts[heroVideoIndex],source=heroPlaylist[heroVideoIndex];heroVideo.muted=true;heroVideo.loop=false;setActiveFeatured(heroVideoIndex);rotateFeaturedCardToCenter(featuredCards[heroVideoIndex],animateCenter);if(heroVideo.dataset.playlistSrc!==source){heroVideo.pause();heroCanPlay=false;heroVideo.classList.add('is-switching');if(heroVideoPoster&&concept.thumbnailUrl){
+   // Keep the last ready poster visible until the next image is actually available.
+   heroVideoPoster.classList.add('is-visible');
+   const request=++heroPosterRequest,pendingPoster=new Image();
+   const reveal=()=>{if(request!==heroPosterRequest||!heroVideo.classList.contains('is-switching'))return;heroVideoPoster.src=pendingPoster.src;heroVideoPoster.classList.add('is-visible');};
+   pendingPoster.onload=reveal;pendingPoster.src=concept.thumbnailUrl;
+   if(pendingPoster.complete&&pendingPoster.naturalWidth)reveal();
+  }if(concept.thumbnailUrl)heroVideo.poster=concept.thumbnailUrl;heroVideo.dataset.playlistSrc=source;heroVideo.src=source;heroVideo.load();}else if(restart){try{heroVideo.currentTime=0;}catch{}}syncHeroVideo();};
+ const heroAheadVideo=document.createElement('video');heroAheadVideo.muted=true;heroAheadVideo.playsInline=true;heroAheadVideo.preload='metadata';let heroAheadTimer=0;
+ const preloadNextHeroVideo=()=>{const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(connection?.saveData||['slow-2g','2g'].includes(connection?.effectiveType))return;clearTimeout(heroAheadTimer);heroAheadTimer=setTimeout(()=>{if(!heroVisible||document.hidden)return;const next=heroPlaylist[(heroVideoIndex+1)%heroPlaylist.length];if(!next||heroAheadVideo.dataset.preloadedSource===next)return;heroAheadVideo.dataset.preloadedSource=next;heroAheadVideo.src=next;heroAheadVideo.load();},3000);};
+ heroVideo?.addEventListener('canplay',()=>{heroCanPlay=true;heroStartupReady=true;syncHeroVideo();});
  const revealHeroVideoFrame=source=>{const reveal=()=>{if(heroVideo.dataset.playlistSrc!==source||heroVideo.currentSrc!==source||heroVideo.paused||heroVideo.readyState<2)return;++heroPosterRequest;heroVideo.classList.remove('is-switching');heroVideoPoster?.classList.remove('is-visible');preloadNextHeroVideo();};if(heroVideo.requestVideoFrameCallback)heroVideo.requestVideoFrameCallback(reveal);else requestAnimationFrame(()=>requestAnimationFrame(reveal));};
  heroVideo?.addEventListener('playing',()=>{const source=heroVideo.dataset.playlistSrc;if(!source||heroVideo.currentSrc!==source)return;revealHeroVideoFrame(source);});
  heroVideo?.addEventListener('play',startProgressTracking);
  heroVideo?.addEventListener('pause',stopProgressTracking);
  heroVideo?.addEventListener('ended',()=>{stopProgressTracking();selectHeroVideo(heroVideoIndex+1);});
  /* Keep the selected poster and expose Retry rather than looping failed URLs. */
- heroVideo?.addEventListener('error',()=>{stopProgressTracking();});
+ heroVideo?.addEventListener('error',()=>{stopProgressTracking();heroVideo.classList.add('is-switching');heroVideoPoster?.classList.add('is-visible');});
  heroVideo?.addEventListener('loadedmetadata',()=>updateFeaturedProgress(featuredCards[heroVideoIndex],heroVideo));
  heroCardGrid.addEventListener('click',event=>{const button=event.target.closest('[data-featured-card]');if(!button)return;event.preventDefault();const card=button.closest('.work-card'),index=featuredCards.indexOf(card);if(index<0)return;selectHeroVideo(index);});
  heroCardGrid.addEventListener('wheel',event=>{if(event.ctrlKey||Math.abs(event.deltaX)<=Math.abs(event.deltaY))return;event.preventDefault();event.stopPropagation();const unit=event.deltaMode===1?16:event.deltaMode===2?heroCardGrid.clientWidth:1;heroCardGrid.scrollBy({left:event.deltaX*unit,behavior:'instant'});},{passive:false});
@@ -118,17 +127,7 @@ window.DreamCarouselInput?.bind(grid);
 const hoverPreviewInput=matchMedia('(hover:hover) and (pointer:fine)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
 carouselCards.forEach(card=>card.setAttribute('aria-roledescription','card'));
-// Fetch only metadata for cards near the viewport so opening a preview can
-// begin quickly without pulling every full-length source at page startup.
-if('IntersectionObserver'in window){
- const cardVideoPreloader=new IntersectionObserver(entries=>entries.forEach(entry=>{
-  if(!entry.isIntersecting)return;
-  const card=entry.target,video=card.querySelector('.work-hover-video'),button=card.querySelector('[data-preview]'),source=button?.dataset.previewVideoSrc||button?.dataset.videoSrc;
-  if(video&&source&&!video.dataset.loadedSource){video.preload='metadata';video.src=source;video.dataset.loadedSource=source;video.load();}
-  cardVideoPreloader.unobserve(card);
- }),{rootMargin:'500px 0px'});
- carouselCards.forEach(card=>cardVideoPreloader.observe(card));
-}
+// Gallery videos are requested only on hover/focus or explicit playback.
 if(!reducedCarouselMotion.matches&&'IntersectionObserver'in window){
  grid.classList.add('has-row-reveal');
  const rowRevealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
