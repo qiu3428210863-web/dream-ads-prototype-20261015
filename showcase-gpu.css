@@ -1,0 +1,14 @@
+/* The accessible DOM is the hit layer; only the curved visual copy is rendered here. */
+.showcase-gpu-canvas{position:fixed;inset:0;z-index:11;width:100%;height:100%;display:block;pointer-events:none;contain:strict;image-rendering:auto}
+html.showcase-gpu-active .showcase-grid .work-card{background:transparent;border-color:transparent!important;box-shadow:none!important}
+html.showcase-gpu-active .showcase-grid .work-open{background:transparent;color:transparent}
+html.showcase-gpu-active .showcase-grid .work-visual,
+html.showcase-gpu-active .showcase-grid .work-cover{background:transparent}
+html.showcase-gpu-active .showcase-grid .work-visual::after{opacity:0!important}
+html.showcase-gpu-active .showcase-grid .work-cover::after,
+html.showcase-gpu-active .showcase-grid .work-hover-video{opacity:0!important}
+html.showcase-gpu-active .showcase-grid .work-product,
+html.showcase-gpu-active .showcase-grid .cover-wordmark,
+html.showcase-gpu-active .showcase-grid .work-caption,
+html.showcase-gpu-active .showcase-grid .work-meta,
+html.showcase-gpu-active .showcase-grid .work-disc{opacity:0!important}

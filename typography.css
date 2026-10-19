@@ -1,0 +1,23 @@
+:root{
+  --type-display:clamp(66px,7.3vw,108px);
+  --type-section:clamp(40px,4.4vw,64px);
+  --type-card:clamp(18px,1.4vw,20px);
+  --type-body:clamp(16px,1.15vw,18px);
+}
+
+main h1{font-size:var(--type-display);font-weight:500;line-height:.98;letter-spacing:-.067em}
+.hero h1{font-weight:500}
+main section:not(.hero) h2{font-size:var(--type-section);font-weight:500;line-height:1.08;letter-spacing:-.045em}
+#how-title{font-size:clamp(32px,4.4vw,64px);white-space:nowrap}
+main h3{font-size:var(--type-card);font-weight:500;line-height:1.25;letter-spacing:-.03em}
+
+.section-heading p,.challenge-heading p,.final-cta p{font-size:var(--type-body);font-weight:400;line-height:1.6}
+.challenge-question-text{font-size:clamp(20px,1.8vw,26px);font-weight:500;line-height:1.2;letter-spacing:-.035em}
+.challenge-answer p{font-size:var(--type-body);font-weight:400;line-height:1.6}
+.work-meta h3,.challenge-step-copy strong{font-size:var(--type-card);font-weight:500;line-height:1.25;letter-spacing:-.03em}
+
+@media(max-width:720px){
+  :root{--type-section:clamp(38px,9vw,48px);--type-card:18px;--type-body:16px}
+  .challenge-question-text{font-size:clamp(18px,5.1vw,23px)}
+  #how-title{font-size:var(--type-section);white-space:normal}
+}

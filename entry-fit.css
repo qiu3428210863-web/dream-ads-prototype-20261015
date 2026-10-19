@@ -1,0 +1,25 @@
+/* The complete entry surface is measured and fitted to the visible viewport. */
+html:has(#entry-dialog[open]),html:has(#entry-dialog[open]) body{overflow:hidden!important}
+.entry-dialog{position:fixed;inset:0;margin:auto;width:720px;max-width:none!important;max-height:none!important;height:max-content;overflow:clip!important;color-scheme:light;zoom:var(--entry-fit,1)}
+#entry-dialog #creator-video{position:absolute;width:1px!important;height:1px!important;max-width:1px;min-height:0!important;padding:0!important;margin:-1px;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%)}
+.entry-dialog .entry-content{padding:24px 30px;min-width:0}
+.entry-dialog .entry-content>.eyebrow{font-size:12px;line-height:1.3}
+.entry-dialog .entry-content h2{font-size:36px;line-height:1.06;margin:13px 0 14px}
+.entry-dialog .entry-content>.muted{max-width:none;font-size:13px;line-height:1.5;margin:0}
+.entry-dialog .entry-content form{margin-top:16px;min-width:0}
+.entry-dialog .entry-content label:not(.consent){font-size:12px;line-height:1.3;margin:10px 0 5px}
+.entry-dialog .entry-content input:not([type=checkbox]),.entry-dialog .entry-content select,.entry-dialog .entry-content textarea{min-width:0;min-height:35px;padding:8px 10px;font-size:13px;line-height:1.35}
+.entry-dialog .entry-content textarea{height:65px;min-height:65px;resize:none}
+.entry-dialog .entry-content small{font-size:10px;line-height:1.4}
+.entry-dialog .word-count{font-size:10px}
+.entry-dialog .entry-content label.video-upload{display:grid!important;grid-template-columns:24px minmax(0,1fr);gap:2px 12px;min-height:62px;margin:5px 0;padding:10px 12px}
+.entry-dialog .video-upload>svg{grid-row:1/3}
+.entry-dialog .video-upload-copy strong{font-size:13px}
+.entry-dialog .entry-content .video-upload-copy small{font-size:11px}
+.entry-dialog .video-file-name{grid-column:2;margin:0;max-width:100%;min-width:0;text-align:left;font-size:10px}
+.entry-dialog .consent{font-size:11px;line-height:1.4;margin:13px 0 0;gap:8px}
+.entry-dialog .form-submit{min-height:44px;margin-top:14px;padding:10px 16px;font-size:15px}
+.entry-dialog .form-error:empty{margin:0}
+.entry-dialog .dialog-close{right:16px;top:16px;width:36px;height:36px;font-size:25px}
+.entry-dialog .entry-success{padding:22px 0 10px}
+@media(max-width:600px){.entry-dialog .entry-content{padding:22px}.entry-dialog .entry-content h2{font-size:31px}.entry-dialog .entry-content>.muted{font-size:12px}}

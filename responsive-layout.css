@@ -1,0 +1,25 @@
+/* Intrinsic sizing prevents browser font metrics and zoom from widening grid tracks. */
+:root{--page-gutter:clamp(16px,3vw,32px)}
+main,.hero-copy,.section-heading,.section-heading>*,.details-layout>*,.faq>*,.step,.openart-footer-main>*{min-width:0}
+.wrap{width:calc(100% - 2 * var(--page-gutter))}
+.header{padding-inline:max(var(--page-gutter),calc((100% - 1440px)/2));gap:clamp(12px,2vw,36px)}
+.brand{min-width:0;flex-shrink:1}
+.header .brand-wordmark{width:clamp(112px,14vw,160px);min-width:0;flex-shrink:1}
+.header-right{min-width:0;flex-shrink:0}
+.section-heading{flex-wrap:wrap;gap:24px}
+.details-layout,.faq{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr)}
+.openart-footer-main,.openart-footer-bottom{width:calc(100% - 2 * var(--page-gutter))}
+.openart-footer-column a,.brief-list dd,.faq-list p{overflow-wrap:anywhere}
+.entry-dialog,.preview-dialog{max-width:calc(100% - 24px);max-height:calc(var(--app-viewport-height,100vh) - 32px)}
+@media(max-width:760px){
+ .details-layout,.faq{grid-template-columns:minmax(0,1fr);gap:28px}
+ .steps{grid-template-columns:minmax(0,1fr)}
+ .step{border-right:0;border-bottom:1px solid var(--arena-divider)}
+ .step:last-child{border-bottom:0}
+ .section-heading>.view-switch{align-self:flex-start}
+}
+@media(max-width:480px){
+ .header .brand>span{display:none}
+ .header-right>.button.small{font-size:11px;padding:9px 11px;gap:8px}
+ .view-switch button{min-width:80px;font-size:16px}
+}
