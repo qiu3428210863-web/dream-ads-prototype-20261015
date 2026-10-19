@@ -12,3 +12,7 @@ html.showcase-gpu-active .showcase-grid .cover-wordmark,
 html.showcase-gpu-active .showcase-grid .work-caption,
 html.showcase-gpu-active .showcase-grid .work-meta,
 html.showcase-gpu-active .showcase-grid .work-disc{opacity:0!important}
+
+/* Example labels are painted into the desktop mesh and remain native on mobile. */
+#showcase-grid .work-example-badge{position:absolute;top:12px;right:12px;z-index:7;display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:5px 10px;border-radius:8px;background:#fff;color:#171717;box-shadow:0 2px 12px #0002;font:600 12px/18px var(--ui-font,Arial,sans-serif);letter-spacing:0;pointer-events:none}
+html.showcase-gpu-active #showcase-grid .work-example-badge{opacity:0}
