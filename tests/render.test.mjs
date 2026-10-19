@@ -224,7 +224,7 @@ test('the concept gallery keeps only the full All view',()=>{
  assert.match(viewCss,/\.showcase-grid\[data-view="cards"\] \.work-card:nth-child\(n\+6\)\{display:none\}/);
  assert.match(viewCss,/\.showcase-grid\[data-view="grid"\]\{/,'full gallery layout remains available');
  assert.match(viewCss,/#showcase-grid \.cover-wordmark,#showcase-grid \.work-caption\{display:none!important\}/,'gallery thumbnail logos and overlaid copy are hidden');
- assert.match(viewCss,/\.showcase-grid\[data-view="grid"\]\.has-row-reveal \.work-card\{[\s\S]*rotateX\(16deg\)[\s\S]*transition:opacity \.48s ease-out,transform \.72s cubic-bezier/,'gallery rows fold open with a smooth staggered reveal');
+ assert.match(viewCss,/\.showcase-grid\[data-view="grid"\]\.has-row-reveal \.work-card\{[\s\S]*translateY\(20px\)[\s\S]*transition:opacity \.48s ease-out,transform \.72s cubic-bezier/,'gallery rows rise without projective geometry changing the texture');
  assert.match(appSource,/const rowRevealObserver=new IntersectionObserver[\s\S]*row\.forEach\(\(card,index\)=>\{card\.style\.setProperty\('--row-card-index',String\(index\)\);card\.classList\.add\('is-row-revealed'\)/,'each row reveals as it enters the viewport');
 });
 
