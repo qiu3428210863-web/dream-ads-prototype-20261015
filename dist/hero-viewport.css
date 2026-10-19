@@ -106,3 +106,12 @@ body .hero-copy.page-perspective-surface{--page-rest-transform:translateY(0)}
  .hero.is-copy-entering .hero-copy h1,.hero.is-copy-entering .hero-description,.hero.is-copy-entering .hero-actions{opacity:1;translate:0 0;animation:none}
  .hero-card-rail.is-entering .hero-card-grid .work-card{opacity:1;translate:0 0;animation:none}
 }
+
+/* Native mobile browsing keeps stable hit targets: no FLIP, hover lift or disc pop-out. */
+@media(max-width:900px),(hover:none),(pointer:coarse){
+ .hero-card-grid.showcase-grid .work-card{transform:none!important;transition:none!important;will-change:auto}
+ .hero-card-rail.is-entering .hero-card-grid .work-card{animation:none}
+ .showcase-grid .work-card .work-disc{display:none!important}
+ .hero-card-grid.showcase-grid .work-open .work-visual,.hero-card-grid.showcase-grid .work-open .work-cover,.hero-card-grid.showcase-grid .work-card .work-product{transform:none!important;animation:none!important}
+ .hero-card-grid.showcase-grid{overflow-anchor:none;scroll-behavior:auto}
+}
