@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test tests/scroll.test.mjs tests/render.test.mjs tests/viewport.test.mjs tests/perspective.test.mjs tests/hero-loading.test.mjs tests/media-feedback.test.mjs tests/carousel-touch.test.mjs",
-    "check": "node --check dist/media-feedback.js && node --check dist/app.js && node --check dist/translation-compat.js && node --check dist/entry-fit.js && node --check dist/viewport-layout.js && node --check dist/hero-parallax.js && node --check dist/page-perspective.js && node --check dist/showcase-quality.js && node --check dist/showcase-gpu.js && node --check dist/scroll-diagnostics.js && npm test",
+    "check": "node --check dist/carousel-input.js && node --check dist/media-feedback.js && node --check dist/app.js && node --check dist/translation-compat.js && node --check dist/entry-fit.js && node --check dist/viewport-layout.js && node --check dist/hero-parallax.js && node --check dist/page-perspective.js && node --check dist/showcase-quality.js && node --check dist/showcase-gpu.js && node --check dist/scroll-diagnostics.js && npm test",
     "check:perspective": "node --test tests/render.test.mjs",
     "check:shaders": "node tests/check-shaders.mjs"
   }

@@ -2,6 +2,8 @@
 (()=>{
  'use strict';
  const root=document.documentElement,grids=[...document.querySelectorAll('.showcase-grid')];
+ const nativeCards=matchMedia('(max-width:900px), (hover:none), (pointer:coarse)');
+ const hoverInput=matchMedia('(hover:hover) and (pointer:fine)');
  const contrast=matchMedia('(forced-colors: active)'),reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
  if(!grids.length||!window.WebGL2RenderingContext||contrast.matches||root.dataset.showcaseGpuInitialized==='true')return;
  root.dataset.showcaseGpuInitialized='true';
@@ -62,6 +64,9 @@
  const maxTextureSize=gl.getParameter(gl.MAX_TEXTURE_SIZE);
  let viewportWidth=0,viewportHeight=0,outputRatio=1;
  function resize(){
+  // Fixed main-thread canvas cannot track compositor-driven mobile momentum atomically.
+  // Restore live DOM before native scrolling; retain GPU curves on fine-pointer desktops.
+  if(nativeCards.matches){suspended=true;deactivate();return;}
   const width=Math.max(1,root.clientWidth),height=Math.max(1,innerHeight),dpr=Math.max(1,window.devicePixelRatio||1);
   outputRatio=window.DreamShowcaseQuality?.outputRatio(width,height,dpr,maxTextureSize)??Math.min(dpr,3,Math.sqrt(12_000_000/(width*height)),maxTextureSize/width,maxTextureSize/height);
   if(outputRatio<1){suspended=true;root.classList.remove('showcase-gpu-active');output.remove();active=false;return;}
@@ -204,8 +209,8 @@
  if('ResizeObserver'in window){const observer=new ResizeObserver(entries=>{for(const entry of entries){const item=cards.find(candidate=>candidate.card===entry.target);if(item)item.dirty=true;}render();});grids.forEach(grid=>observer.observe(grid));cards.forEach(item=>observer.observe(item.card));}
  grids.forEach(grid=>{
  grid.addEventListener('scroll',scheduleRender,{passive:true});
- grid.addEventListener('pointerover',event=>{const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget))animateHover(cards.find(item=>item.card===card));});
- grid.addEventListener('pointerout',event=>{const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget))animateHover(cards.find(item=>item.card===card));});
+ grid.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||event.pointerType==='pen'||!hoverInput.matches||grid.classList.contains('is-interacting'))return;const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget))animateHover(cards.find(item=>item.card===card));});
+ grid.addEventListener('pointerout',event=>{if(event.pointerType==='touch'||event.pointerType==='pen'||!hoverInput.matches)return;const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget))animateHover(cards.find(item=>item.card===card));});
  grid.addEventListener('focusin',event=>{const card=event.target.closest('.work-card');if(card)animateHover(cards.find(item=>item.card===card));});
  grid.addEventListener('focusout',event=>{const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget))animateHover(cards.find(item=>item.card===card));});
  grid.addEventListener('play',event=>{
@@ -217,6 +222,7 @@
  grid.addEventListener('load',event=>{const card=event.target.closest('.work-card');if(card)invalidate(cards.find(item=>item.card===card));},true);
  const mutations=new MutationObserver(records=>{let layoutChanged=false;for(const record of records){const element=record.target.nodeType===1?record.target:record.target.parentElement,card=element?.closest?.('.work-card'),item=cards.find(candidate=>candidate.card===card);if(item)item.dirty=true;else if(record.target===grid){cards.filter(card=>card.owner===grid).forEach(card=>card.dirty=true);layoutChanged=record.attributeName==='data-view';}}if(layoutChanged)animateLayout();else render();});mutations.observe(grid,{attributes:true,subtree:true,characterData:true,childList:true,attributeFilter:['data-view','class']});mutations.observe(grid.parentElement,{attributes:true,attributeFilter:['class']});
  });
+ nativeCards.addEventListener?.('change',scheduleResize);
  document.fonts?.ready?.then(()=>invalidate());
  new MutationObserver(()=>invalidate()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
  new MutationObserver(()=>invalidate()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});

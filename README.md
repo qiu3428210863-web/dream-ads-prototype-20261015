@@ -23,12 +23,10 @@ Preview: http://127.0.0.1:4173/ . Source and static assets live in `dist/`. Test
 
 `main` contains the maintained project. GitHub Pages publishes the root of `gh-pages`, generated from the committed `dist/` directory. `.nojekyll` preserves static assets. Local review pages are ignored and not published.
 
-After committing website changes on `main`, publish from PowerShell:
+After every completed and verified website change, commit the intended files on `main` and publish immediately from PowerShell:
 
 ```powershell
-git push origin main
-$pagesCommit = git subtree split --prefix dist
-git push origin "${pagesCommit}:refs/heads/gh-pages"
+./tools/publish-pages.ps1
 ```
 
-The Pages deployment then runs automatically for `gh-pages`. Avoid committing credentials, local form data, environment files or browser recordings. Keep vendor license notices with bundled libraries. Branding and media require the appropriate permissions before commercial use.
+The script reruns checks, pushes both branches, waits for the exact Pages build and verifies the public HTML. See [mobile carousel diagnosis](docs/mobile-carousel-fix.md) for the latest touch regression coverage. Avoid committing credentials, local form data, environment files or browser recordings. Keep vendor license notices with bundled libraries. Branding and media require the appropriate permissions before commercial use.

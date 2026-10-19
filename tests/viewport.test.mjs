@@ -66,7 +66,7 @@ test('hero retains viewport fallbacks and covers the complete responsive scene',
  const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
  assert.match(html,/width=device-width,initial-scale=1,viewport-fit=cover/);
  assert.match(html,/href="responsive-layout\.css"/);
- assert.match(html,/src="viewport-layout\.js" defer><\/script><script src="hero-parallax\.js" defer><\/script><script src="app\.js"/);
+ assert.match(html,/src="viewport-layout\.js"[\s\S]*src="hero-parallax\.js"[\s\S]*src="carousel-input\.js(?:\?[^"]*)?"[\s\S]*src="app\.js(?:\?[^"]*)?"/,'layout and gesture policies initialize before the application');
 });
 
 test('hero video parallax moves at 0.3x and stays clipped to the hero',()=>{

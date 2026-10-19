@@ -115,3 +115,7 @@ body .hero-copy.page-perspective-surface{--page-rest-transform:translateY(0)}
  .hero-card-grid.showcase-grid .work-open .work-visual,.hero-card-grid.showcase-grid .work-open .work-cover,.hero-card-grid.showcase-grid .work-card .work-product{transform:none!important;animation:none!important}
  .hero-card-grid.showcase-grid{overflow-anchor:none;scroll-behavior:auto}
 }
+
+/* Suppress hover-only decoration while a rail is under direct manipulation. */
+.showcase-grid.is-interacting .work-card .work-disc{display:none!important}
+.hero-card-grid.showcase-grid.is-interacting .work-card{--hover-lift:0px}

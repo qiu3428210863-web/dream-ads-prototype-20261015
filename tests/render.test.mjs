@@ -51,8 +51,8 @@ test('page resources work under a static project subpath',()=>{
   assert.equal(url.origin,'https://example.invalid');assert.ok(url.pathname.startsWith('/project/'));
   assert.ok(existsSync(new URL('../dist/'+match[1],import.meta.url)),`${match[1]} exists`);
  }
- for(const path of ['showcase-gpu.css','showcase-quality.js','showcase-gpu.js'])assert.equal((html.match(new RegExp(`(?:src|href)="${path}"`,'g'))||[]).length,1,`${path} loads once`);
- for(const path of ['page-perspective.css','page-perspective.js'])assert.equal((html.match(new RegExp(`(?:src|href)="${path}"`,'g'))||[]).length,1,`${path} is loaded once`);
+ for(const path of ['showcase-gpu.css','showcase-quality.js','showcase-gpu.js'])assert.equal((html.match(new RegExp(`(?:src|href)="${path}(?:\\?[^\"]*)?"`,'g'))||[]).length,1,`${path} loads once`);
+ for(const path of ['page-perspective.css','page-perspective.js'])assert.equal((html.match(new RegExp(`(?:src|href)="${path}(?:\\?[^\"]*)?"`,'g'))||[]).length,1,`${path} is loaded once`);
 });
 
 test('OpenArt-inspired footer has responsive link columns, social destinations, and the official oversized wordmark',()=>{
