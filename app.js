@@ -76,6 +76,7 @@ function startHeroCardEntrance(cards,rail){
 grid.innerHTML=concepts.map((c,index)=>conceptCardMarkup(c,index,concepts.length)).join('');
 if(heroCardGrid){
  heroCardGrid.innerHTML=concepts.slice(0,5).map((c,index)=>conceptCardMarkup(c,index,5,true)).join('');
+ window.DreamCarouselInput?.bind(heroCardGrid);
  const nativeFeatured=matchMedia('(max-width:900px), (hover:none), (pointer:coarse)');
  const rail=heroCardGrid.parentElement,featuredCards=$$('.work-card',heroCardGrid),heroConcepts=concepts.slice(0,5),heroPlaylist=heroConcepts.map(concept=>concept.videoSrc).filter(Boolean);
  rail.classList.add('is-visible');
@@ -113,6 +114,8 @@ if(heroCardGrid){
  document.dispatchEvent(new CustomEvent('dream:hero-ready'));
 }
 const conceptRails=[grid];
+window.DreamCarouselInput?.bind(grid);
+const hoverPreviewInput=matchMedia('(hover:hover) and (pointer:fine)');
 const carouselCards=$$('.work-card',grid),carouselCounter=$('.carousel-counter');
 carouselCards.forEach(card=>card.setAttribute('aria-roledescription','card'));
 // Fetch only metadata for cards near the viewport so opening a preview can
@@ -414,9 +417,10 @@ function setPlaying(value){playing=value;if(previewMedia){if(value)previewMedia.
 function showMediaError(){previewMedia=null;previewVideo.hidden=true;previewArt.hidden=false;playing=false;updateVolumeIcon(Number(previewVolume.value),true);previewStatus.textContent='Video could not load. Check your connection and select Try again.';$('.preview-stage').classList.add('has-load-error');setPlaying(false);}
 function stopHoverPreviews(except=null){conceptRails.flatMap(rail=>$$('.work-card.is-previewing',rail)).forEach(card=>{if(card===except)return;card.classList.remove('is-previewing');card.querySelector('.work-hover-video')?.pause();});}
 conceptRails.forEach(grid=>{
-grid.addEventListener('pointerover',event=>{const thumb=event.target.closest('.work-visual');if(!thumb||thumb.contains(event.relatedTarget))return;const card=thumb.closest('.work-card');if(!card||card===hoverCard)return;stopHoverPreviews(card);hoverCard=card;card.classList.add('is-previewing');const media=card.querySelector('.work-hover-video'),button=card.querySelector('[data-preview]'),source=button?.dataset.previewVideoSrc||button?.dataset.videoSrc;card.classList.remove('preview-load-error','has-video-source');if(source&&media){card.classList.add('has-video-source');if(media.dataset.loadedSource!==source){media.src=source;media.dataset.loadedSource=source;}media.muted=true;media.play().catch(error=>{if(error.name==='AbortError')return;card.classList.add('preview-load-error');media.dispatchEvent(new CustomEvent('dream:play-rejected',{detail:{name:error.name}}));});}});
+grid.addEventListener('dream:rail-interaction',()=>{stopHoverPreviews();hoverCard=null;});
+grid.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||event.pointerType==='pen'||!hoverPreviewInput.matches||grid.classList.contains('is-interacting'))return;const thumb=event.target.closest('.work-visual');if(!thumb||thumb.contains(event.relatedTarget))return;const card=thumb.closest('.work-card');if(!card||card===hoverCard)return;stopHoverPreviews(card);hoverCard=card;card.classList.add('is-previewing');const media=card.querySelector('.work-hover-video'),button=card.querySelector('[data-preview]'),source=button?.dataset.previewVideoSrc||button?.dataset.videoSrc;card.classList.remove('preview-load-error','has-video-source');if(source&&media){card.classList.add('has-video-source');if(media.dataset.loadedSource!==source){media.src=source;media.dataset.loadedSource=source;}media.muted=true;media.play().catch(error=>{if(error.name==='AbortError')return;card.classList.add('preview-load-error');media.dispatchEvent(new CustomEvent('dream:play-rejected',{detail:{name:error.name}}));});}});
 grid.addEventListener('pointerout',event=>{const thumb=event.target.closest('.work-visual');if(!thumb||thumb.contains(event.relatedTarget))return;const card=thumb.closest('.work-card');if(!card)return;card.classList.remove('is-previewing');card.querySelector('.work-hover-video')?.pause();if(hoverCard===card)hoverCard=null;});
-grid.addEventListener('focusin',event=>{const card=event.target.closest('.work-card');if(!card)return;stopHoverPreviews(card);hoverCard=card;card.classList.add('is-previewing');});
+grid.addEventListener('focusin',event=>{if(!event.target.matches(':focus-visible'))return;const card=event.target.closest('.work-card');if(!card)return;stopHoverPreviews(card);hoverCard=card;card.classList.add('is-previewing');});
 grid.addEventListener('focusout',event=>{const card=event.target.closest('.work-card');if(card&&!card.contains(event.relatedTarget)){card.classList.remove('is-previewing');if(hoverCard===card)hoverCard=null;}});
 grid.addEventListener('error',event=>{const media=event.target,card=media.closest('.work-card');if(!card||!media.matches('.work-hover-video'))return;delete media.dataset.loadedSource;card.classList.remove('has-video-source');if(card.classList.contains('is-previewing'))card.classList.add('preview-load-error');media.pause();media.removeAttribute('src');media.load();},true);
 });
