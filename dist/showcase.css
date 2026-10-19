@@ -43,6 +43,9 @@
   opacity:.86;transform:rotate(6deg);filter:drop-shadow(0 15px 16px #0005);
   transition:transform .5s cubic-bezier(.2,.7,.3,1),filter .4s;
 }
+.showcase-grid .work-product.work-poster{inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transform:none;filter:none}
+.showcase-grid .work-card:hover .work-product.work-poster{transform:scale(1.025)}
+.disc-art img.work-disc-poster{object-fit:cover;transform:none;opacity:1;filter:none}
 .showcase-grid .cover-wordmark{
   position:absolute;top:9%;left:50%;width:88px;height:auto;max-width:25%;
   filter:invert(1);z-index:2;transform:translateX(-50%);opacity:.96;
@@ -126,5 +129,6 @@
 .disc-art::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 15%,#d4f8ff77 21%,transparent 27% 49%,#ffe6ff88 57%,transparent 66% 83%,#fff9d466 90%,transparent);mix-blend-mode:screen}
 .disc-hub{position:absolute;left:50%;top:50%;width:19%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #ffffffd9;background:radial-gradient(circle,transparent 0 34%,#a5a8b5 37% 42%,#e2e4ebbb 44% 64%,#fff9 66% 75%,#9692a7 77%);box-shadow:0 0 0 2px #c7c2ce88}
 .work-card:focus-within .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}
+.work-card.suppress-hover-effects .work-disc{opacity:0!important;transform:translate(-50%,0)!important}
 @media(hover:hover){.work-card:hover .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}}
 @media(prefers-reduced-motion:reduce){.work-disc{transition:none;transform:translate(-50%,0)}.work-card:hover .work-disc,.work-card:focus-within .work-disc{transform:translate(-50%,-18%)}}

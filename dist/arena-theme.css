@@ -5,7 +5,7 @@
  --arena-border:#373737;--arena-divider:#292929;--arena-pink:#ff82db;--arena-action:#cd009b;
  --arena-plum:#470c43;--arena-green:#bfe6bc;--arena-cyan:#9de9f6;
 }
-body,.crt-surface{background:var(--arena-page);color:var(--arena-ink)}
+body{background:var(--arena-page);color:var(--arena-ink)}
 p{color:var(--arena-muted)}
 ::selection{background:var(--arena-pink);color:var(--arena-plum)}
 :focus-visible{outline-color:var(--arena-action)}
@@ -15,11 +15,27 @@ p{color:var(--arena-muted)}
 .button.dark{background:#111113;color:#fff}
 .button.dark:hover{background:#272727}
 .button.light,.icon-button,.quick-facts,.brief-panel,.step{background:#fff;border-color:var(--arena-border)}
+.brief-panel,.step{color:#171717}
+.reward-amount,.reward-card p{color:#191919}
 .button.light:hover,.icon-button:hover{background:var(--arena-card)}
 .text-button:hover,.footer a:hover,.footer button:hover{color:var(--arena-action)}
 .details,.brief-list>div,.steps,.step,.faq-list details{border-color:var(--arena-divider)}
 .faq-list details:first-child{border-top-color:var(--arena-divider)}
-.header,.mobile-nav{background:#fff;border-color:var(--arena-border)}
+.header,.mobile-nav{background:rgb(9 9 9 / .72);border-color:rgb(255 255 255 / .12);backdrop-filter:blur(20px) saturate(135%);-webkit-backdrop-filter:blur(20px) saturate(135%)}
+.header{box-shadow:0 1px 0 rgb(255 255 255 / .035)}
+.header .brand-wordmark{filter:invert(1)}
+.header .desktop-nav a{color:#aaa;transition:color .2s ease}
+.header .desktop-nav a:after{display:none}
+.header .desktop-nav,.header .menu-toggle,.header .mobile-nav{display:none!important}
+.header .desktop-nav a:hover,.header .desktop-nav a.active{color:#fff}
+.header .button.dark{background:#f3f3f3;color:#111;border-color:#fff}
+.header .button.dark:hover{background:#fff}
+.header .menu-toggle{background:rgb(255 255 255 / .08);border-color:rgb(255 255 255 / .2);color:#fff}
+.header .menu-toggle:hover{background:rgb(255 255 255 / .14)}
+.mobile-nav{background:rgb(9 9 9 / .88);box-shadow:0 20px 36px rgb(0 0 0 / .42)}
+.mobile-nav a{border-color:rgb(255 255 255 / .12);color:#eee}
+.mobile-nav .button.dark{background:#f3f3f3;color:#111}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.header,.mobile-nav{background:#090909f2}}
 .hero{background:var(--arena-page)}
 .art-orbit{background:radial-gradient(circle at 40% 30%,#fff,#fff5fc 35%,var(--arena-pink) 75%,#fb23c2);box-shadow:inset -8px -10px 40px #cd009b20,0 20px 65px #ff82db33}
 .hero-product{filter:grayscale(1) drop-shadow(0 24px 20px #0002)}
@@ -53,8 +69,6 @@ html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
 .showcase-grid.lenis{scroll-behavior:auto!important}
 .work-cover,.work-disc{will-change:transform}
 .showcase-grid .work-card:hover .work-product{transform:rotate(6deg)}
-.crt-glass{transform:translateZ(0)}
-.crt-surface{filter:none}
 .showcase-carousel{--rail-gutter:max(32px,calc((var(--viewport-width,100vw) - 1440px)/2));width:var(--viewport-width,100vw);margin-inline-start:calc((100% - var(--viewport-width,100vw))/2)}
 .showcase-grid{overflow-x:auto;overflow-y:hidden;gap:24px;padding:116px var(--rail-gutter) 14px;touch-action:pan-x pan-y;scroll-snap-type:none;scroll-behavior:auto;scroll-padding-inline:var(--rail-gutter)}
 .carousel-navigation{width:calc(100% - 64px);max-width:1440px;margin-inline:auto}
@@ -73,9 +87,8 @@ html.lenis,html.lenis body{height:auto;scroll-behavior:auto!important}
 .work-open:focus-visible .work-meta h3{color:var(--arena-action)}
 .disc-art,.work-disc.lifestyle .disc-art,.work-disc.tech .disc-art{background:var(--arena-card)}
 .disc-art img{filter:grayscale(1)}
-.crt-glass::before{background:radial-gradient(ellipse 76% 86% at 50% 50%,transparent 64%,#0000001a 80%,#000000a6 100%),linear-gradient(90deg,#00000075,transparent 4%,transparent 96%,#00000075),linear-gradient(0deg,#00000047,transparent 6%,transparent 94%,#00000047)}
 /* The hero source is a dense halftone raster. Soften its screen-frequency dots before
-   the CRT warp and fade its hard box edge into the page background. */
+   the page perspective and fade its hard box edge into the page background. */
 .hero-backdrop{
  transform:scale(1.025);
  filter:grayscale(1) blur(1.6px);

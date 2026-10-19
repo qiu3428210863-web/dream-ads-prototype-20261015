@@ -1,0 +1,74 @@
+.creative-cta-art{display:contents}
+.creative-cta #join-title :where(font,span){font:inherit;letter-spacing:inherit}
+/* All studio objects are foreground; the live title sits behind the complete plate. */
+html body .final-cta.creative-cta{
+ position:relative;isolation:isolate;width:calc(100% - 48px);max-width:none;
+ margin:30px auto 64px;padding:0;aspect-ratio:1.9;min-height:480px;
+ border:1px solid #ffffff18;border-radius:24px;overflow:hidden;
+ background:#080709;box-shadow:none;text-align:left;color:#f5f5f5;
+}
+.creative-cta-background,.creative-cta-subject{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+ pointer-events:none;user-select:none;transform:scale(.9);transform-origin:center bottom;
+}
+.creative-cta-background{
+ z-index:0;
+ /* Feather the photograph itself, including its scaled inset edges. */
+ -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent),linear-gradient(180deg,transparent,#000 18%,#000 82%,transparent);
+ mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent),linear-gradient(180deg,transparent,#000 18%,#000 82%,transparent);
+ -webkit-mask-composite:source-in;mask-composite:intersect;
+}
+html body .creative-cta #join-title{
+ position:absolute;z-index:1;top:3%;left:2%;right:2%;margin:0;
+ font-family:inherit;font-size:clamp(18px,6.9vw,152px);font-weight:500;
+ line-height:1.05;letter-spacing:-.045em;color:#f5f5f5;white-space:nowrap;text-align:center;
+}
+.creative-cta-subject{
+ z-index:2;clip-path:none;
+ -webkit-mask-image:linear-gradient(180deg,#000 88%,transparent 100%);
+ mask-image:linear-gradient(180deg,#000 88%,transparent 100%);
+}
+.creative-cta::after{content:none}
+.creative-cta-action{
+ position:absolute;z-index:4;top:62%;left:50%;transform:translate(-50%,-50%);
+ width:max-content;max-width:90%;
+}
+html body .final-cta.creative-cta .button.dark{
+ display:flex;justify-content:center;align-items:center;margin:0;
+ min-width:clamp(260px,24vw,380px);min-height:82px;padding:22px 40px;
+ position:relative;overflow:visible;isolation:isolate;border:1px solid #fff;border-radius:999px;background:#fff;color:#111;
+ font-size:clamp(18px,1.6vw,24px);font-weight:500;line-height:1.2;text-align:center;
+ box-shadow:0 10px 36px #0005;
+}
+html body .final-cta.creative-cta .button.dark:is(:hover,:focus-visible){background:var(--arena-action);border-color:var(--arena-action);color:#fff}
+.creative-cta-action .button::after{
+ content:"";position:absolute;inset:-6px;border:2.25px solid #e89bd3;border-radius:inherit;
+ opacity:0;transform:scale(.97);pointer-events:none;transition:opacity .22s ease,transform .3s cubic-bezier(.2,.75,.25,1);
+}
+.creative-cta-action .button:is(:hover,:focus-visible)::after{opacity:1;transform:scale(1)}
+html body .final-cta.creative-cta .button:focus-visible{outline:none}
+.creative-cta-action .cta-label-window{display:block;height:1.2em;overflow:hidden}
+.creative-cta-action .cta-label-track{display:flex;flex-direction:column;will-change:transform}
+.creative-cta-action .cta-label-track>span{display:block;height:1.2em;line-height:1.2;flex:none;white-space:nowrap;font-size:inherit;color:inherit}
+.creative-cta-action .button:is(:hover,:focus-visible) .cta-label-track{animation:cta-label-roll 1.15s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes cta-label-roll{0%,42%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+@media(prefers-reduced-motion:reduce){.creative-cta-action .button:is(:hover,:focus-visible) .cta-label-track{animation:none}.creative-cta-action .button::after{transition:none}}
+@media(max-width:720px){
+ html body .final-cta.creative-cta{width:calc(100% - 24px);aspect-ratio:auto;min-height:420px;border-radius:18px;margin:20px auto 36px}
+ .creative-cta-background,.creative-cta-subject{top:54%;bottom:auto;height:auto;aspect-ratio:1672/941;object-fit:fill;translate:0 -50%}
+ html body .creative-cta #join-title{top:9%;left:2%;right:2%;font-size:6.35vw;line-height:1.05}
+ html body .final-cta.creative-cta .button.dark{min-width:230px;min-height:68px;padding:20px 30px;border-radius:999px;font-size:18px}
+}
+
+/* Reuse the registered transparent foreground on a daylight studio surface. */
+html body .final-cta.creative-cta{transition:background-color .55s ease,border-color .55s ease}
+.creative-cta-background{opacity:1;transition:opacity .55s ease}
+.creative-cta-subject{filter:brightness(1);transition:filter .55s ease}
+html body .creative-cta #join-title{transition:color .55s ease}
+html[data-theme="light"] body .final-cta.creative-cta{background:var(--arena-page);border-color:transparent;color:var(--arena-ink)}
+html[data-theme="light"] .creative-cta-background{opacity:0}
+html[data-theme="light"] .creative-cta-subject{filter:brightness(1.08) saturate(.94)}
+html[data-theme="light"] body .creative-cta #join-title{color:#211d24}
+html[data-theme="light"] body .final-cta.creative-cta .button.dark{box-shadow:0 8px 32px #24152c24;border-color:#dfd9e3}
+html[data-theme="light"] body .final-cta.creative-cta .button.dark:is(:hover,:focus-visible){border-color:var(--arena-action)}
+@media(prefers-reduced-motion:reduce){html body .final-cta.creative-cta,.creative-cta-background,.creative-cta-subject,html body .creative-cta #join-title{transition:none}}

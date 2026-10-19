@@ -1,0 +1,45 @@
+/* Shared tokens and component variants; cinematic display lettering stays bespoke. */
+:root{--ui-font:DreamSans,Arial,"Helvetica Neue",Helvetica,system-ui,sans-serif;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-section:clamp(56px,6vw,88px);--ui-radius:12px;--ui-radius-card:16px;--ui-pill:999px;--ui-accent:#b5148a;--ui-accent-hover:#970d72;--ui-focus:#e89bd3;--ui-outline:2.25px;--ui-surface:#151515;--ui-on-surface:#f5f5f5;--ui-muted:#b4b0b7;--ui-danger:#ffb4bc;--ui-duration:180ms}
+html[data-theme="light"]{--ui-surface:#fff;--ui-on-surface:#211d24;--ui-muted:#69636d;--ui-danger:#a51c35}
+body,input,select,textarea,button{font-family:var(--ui-font)}
+body{font-size:var(--type-body);font-weight:400;line-height:1.6}
+.section{padding-block:var(--space-section)}
+.section-heading,.challenge-heading,.challenge-steps-heading{margin-bottom:var(--space-6)}
+.section-heading p,.challenge-heading p,.challenge-steps-heading p{margin-top:var(--space-4);max-width:70ch}
+main h1,main section:not(.hero):not(.creative-cta) h2{letter-spacing:-.04em}
+.work-meta h3,.challenge-step-copy h3{font-size:var(--type-card);font-weight:500;line-height:1.25}
+.challenge-step-copy{padding-top:var(--space-5)}
+.challenge-step-copy p{margin-top:var(--space-2)}
+.button,.entry-dialog .entry-success #success-done,.entry-dialog .entry-success #edit-draft{min-height:48px;padding:12px 24px;border-radius:var(--ui-radius);font-size:16px;font-weight:600;line-height:1.4;white-space:normal;text-align:center;transition:color var(--ui-duration),background-color var(--ui-duration),border-color var(--ui-duration),box-shadow var(--ui-duration),transform var(--ui-duration)}
+.header .button.small{min-height:44px;padding:10px 16px;font-size:14px}
+.button.dark:hover,.button.dark:focus-visible,.entry-dialog .entry-success #success-done:hover{background:var(--ui-accent);color:#fff}
+.button.light:hover{border-color:var(--ui-accent);color:var(--ui-accent)}
+.button:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:none}
+:where(button,a,input,textarea,select):focus-visible{outline:var(--ui-outline) solid var(--ui-focus);outline-offset:5px}
+.theme-toggle,.icon-button,.player-icon,.entry-dialog .dialog-close{min-width:44px;min-height:44px}
+.creative-cta .creative-cta-action .button{border-radius:var(--ui-pill)}
+.creative-cta .creative-cta-action .button:hover,.creative-cta .creative-cta-action .button:focus-visible{background:var(--ui-accent);color:#fff}
+.entry-dialog input:not([type=checkbox]),.entry-dialog textarea,.entry-dialog select{font-size:16px;border-radius:var(--ui-radius);line-height:1.5}
+.entry-dialog .entry-content label{font-size:16px;font-weight:500}
+.entry-dialog .entry-content small,.entry-dialog .entry-content .video-file-name{font-size:14px;line-height:1.5}
+.entry-dialog .form-error{color:#a51c35!important}
+.player-time{font-variant-numeric:tabular-nums}
+.preview-info p,.preview-status{font-size:14px;line-height:1.6}
+.media-feedback{position:relative;z-index:6;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 16px;margin-top:12px;border-radius:var(--ui-radius);background:var(--ui-surface);color:var(--ui-on-surface);font-size:14px;line-height:1.5}
+.media-feedback p{color:inherit;margin:0;flex:1 1 160px}
+.media-feedback[data-state="error"]{border:1px solid var(--ui-danger)}
+.media-feedback button{min-height:44px;padding:10px 18px;border-radius:var(--ui-radius);font-size:14px;font-weight:600;background:var(--ui-accent);color:#fff}
+.media-feedback button:hover{background:var(--ui-accent-hover)}
+.hero>.media-feedback{position:absolute;inset:auto 24px 16px;margin:0;width:fit-content;max-width:calc(100% - 48px)}
+.work-card>.media-feedback{font-size:14px;margin:8px}
+.preview-player>.media-feedback{margin:0 0 12px}
+input,textarea{caret-color:var(--ui-accent)}
+a{text-underline-offset:.2em}
+@media(max-width:720px){.section-heading,.challenge-heading,.challenge-steps-heading{margin-bottom:24px}.challenge-step-copy{padding-top:16px}.player-controls{grid-template-columns:44px 70px minmax(0,1fr) 44px 44px;gap:4px}.preview-player{padding-inline:8px}.player-volume-control{width:44px}.player-icon{width:44px;height:44px}.player-time{font-size:11px}.hero>.media-feedback{inset:auto 12px 8px;max-width:calc(100% - 24px)}}
+@media(prefers-reduced-motion:reduce){.button,.media-feedback button{transition:none}}
+/* Primary CTA hover and detached focus frame share one palette. */
+html body .header .button.dark:is(:hover,:focus-visible),html body .hero .button.dark:is(:hover,:focus-visible),html body .final-cta.creative-cta .button.dark:is(:hover,:focus-visible){background:var(--ui-accent);border-color:var(--ui-accent);color:#fff}
+.creative-cta-action .button::after{border-width:var(--ui-outline);border-color:var(--ui-focus)}
+/* Lead copy, card metadata and controls use explicit roles rather than inherited exceptions. */
+.hero .hero-description{font-size:clamp(18px,1.5vw,20px);font-weight:400;line-height:1.6}
+.work-meta p{font-size:14px;font-weight:400;line-height:1.5}

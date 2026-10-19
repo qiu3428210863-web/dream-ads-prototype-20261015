@@ -19,7 +19,7 @@ function boot(){
  clientWidth=1280;clientHeight=580;scrollWidth=7200;scrollHeight=580;offsetLeft=0;offsetTop=0;offsetWidth=560;offsetHeight=450;
   constructor(){super();this.classList.remove=(...names)=>names.forEach(name=>this.classList.delete(name));this.classList.contains=name=>this.classList.has(name);}
   querySelector(selector){return nodes.get(selector);}
-  querySelectorAll(selector){return selector==='.work-card'?cards:selector==='[data-showcase-view]'?viewButtons:[];}
+  querySelectorAll(selector){return selector==='.work-card'?cards:selector==='[data-showcase-toggle]'?viewButtons:[];}
   attributes={};animations=[];
   setAttribute(name,value){this.attributes[name]=value;}
   animate(keyframes,options){const animation={keyframes,options,cancelled:false,cancel(){this.cancelled=true;},finish(){this.onfinish?.();}};this.animations.push(animation);return animation;}
@@ -38,7 +38,7 @@ function boot(){
  const win=new Window(),doc=new Element(),root=new Element(),body=new Element(),grid=new Element();
  root.scrollHeight=5000;root.scrollWidth=1280;
  const cards=Array.from({length:12},(_,i)=>{const card=new Element();card.offsetLeft=32+i*584;return card;});
- const viewButtons=['cards','grid'].map(view=>{const button=new Element();button.dataset.showcaseView=view;button.parentElement=grid;return button;});
+ const viewButtons=[];
  const header=new Element();header.getBoundingClientRect=()=>({height:76});
  const nodes=new Map([['#showcase-grid',grid],['.carousel-counter',new Element()],['.header',header]]);
  doc.documentElement=root;doc.body=body;
@@ -61,135 +61,30 @@ function boot(){
  }
  return {advance,wheel,evaluate,grid,win,cards,viewButtons};
 }
-function arrive(app){app.wheel(app.evaluate('carouselPinY-pageScroll.animatedScroll'));app.advance(60);}
-
-test('vertical input remains vertical until the cards reach the center',()=>{
- const app=boot();app.wheel(100);app.advance(45);
- assert.equal(app.grid.scrollLeft,0);assert.ok(app.win.scrollY>650);assert.ok(app.win.scrollY<app.evaluate('carouselPinY'));
-});
-test('crossing the card center pins the page and accumulates horizontal wheel distance',()=>{
- const app=boot();arrive(app);
- const pin=app.evaluate('carouselPinY');assert.equal(app.win.scrollY,pin);
- app.wheel(120);app.advance(2);app.wheel(120);app.advance(2);
- assert.equal(app.evaluate('railScroll.targetScroll'),300);
- const released=app.grid.scrollLeft;app.advance(8);
- assert.ok(app.grid.scrollLeft>released,'rail continues moving after wheel input ends');assert.equal(app.win.scrollY,pin);
-});
-test('both boundaries hand outward wheel input back to the page',()=>{
- const app=boot();arrive(app);
- const pin=app.evaluate('carouselPinY');app.evaluate('scrollCarouselTo(carouselLimit,true)');
- app.wheel(120);app.advance(30);assert.ok(app.win.scrollY>pin);
- app.wheel(-500);app.advance(40);assert.equal(app.win.scrollY,pin);
- app.evaluate('scrollCarouselTo(0,true)');app.wheel(-120);app.advance(30);assert.ok(app.win.scrollY<pin);
-});
-test('outward horizontal touchpad input becomes vertical motion at the end',()=>{
- const app=boot();arrive(app);app.evaluate('scrollCarouselTo(carouselLimit,true)');
- const y=app.win.scrollY;app.wheel(0,160);app.advance(20);assert.ok(app.win.scrollY>y);
-});
-test('line wheel units match pixel units and fractional touchpad deltas are retained',()=>{
- const app=boot();arrive(app);app.wheel(3,0,1);
- assert.equal(app.evaluate('railScroll.targetScroll'),62.5);
- app.wheel(.2);assert.equal(app.evaluate('railScroll.targetScroll'),62.75);
-});
-test('arrival decelerates over multiple frames and transfers excess distance after docking',()=>{
- const app=boot(),start=app.win.scrollY,pin=app.evaluate('carouselPinY');app.wheel(400);
- const positions=[];for(let i=0;i<42;i++){app.advance();positions.push(app.win.scrollY);}
- assert.ok(positions[2]>start&&positions[2]<pin-20,'arrival does not jump to the pin');
- assert.ok(positions.every(y=>y<=pin),'no vertical overshoot');
- assert.ok(positions[6]-positions[5]>positions[30]-positions[29],'arrival velocity decreases');
- assert.equal(app.win.scrollY,pin);assert.ok(app.grid.scrollLeft>0,'excess distance eases into the rail');
-});
-test('reversing during arrival cancels docking and does not leave an input lock',()=>{
- const app=boot();app.wheel(400);app.advance(8);const y=app.win.scrollY;
- app.wheel(-120);app.advance(50);
- assert.ok(app.win.scrollY<y);assert.equal(app.grid.scrollLeft,0);assert.equal(app.evaluate('showcaseDock'),null);
-});
-
-test('grid switch cancels docking, releases vertical scroll, and preserves card nodes',()=>{
- const app=boot();app.wheel(400);app.advance(8);
- assert.ok(app.evaluate('showcaseDock'));
- app.cards.slice(3).forEach((card,index)=>{const left=1800+index*584;card.getBoundingClientRect=()=>({left,top:300,width:560,height:450,right:left+560,bottom:750});});
- app.viewButtons[1].dispatchEvent({type:'click'});
+test('the full gallery is the default and vertical gestures remain page scrolls',()=>{
+ const app=boot();
+ assert.match(readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),/carouselPinY|showcaseDock/);
+ assert.match(readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),/const horizontal=Math\.abs\(deltaX\)>Math\.abs\(deltaY\)/,'wheel input distinguishes horizontal gestures from vertical page scrolling');
+ assert.match(readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),/if\(horizontal&&grid\.contains\(event\.target\)\)/,'only horizontal gestures over the carousel move its cards');
  assert.equal(app.evaluate('showcaseView'),'grid');
- assert.equal(app.evaluate('showcaseDock'),null);
+ assert.equal(app.grid.dataset.view,'grid');
  assert.equal(app.evaluate('carouselLimit'),0);
- assert.equal(app.viewButtons[1].attributes['aria-pressed'],'true');
- assert.equal(app.viewButtons[0].attributes['aria-pressed'],'false');
- assert.equal(app.cards[0].attributes['aria-roledescription'],'card');
- const y=app.win.scrollY;app.wheel(180);app.advance(40);
- assert.ok(app.win.scrollY>y,'grid must not capture vertical input');
+ const vertical=app.wheel(120);app.advance(8);
  assert.equal(app.grid.scrollLeft,0);
- assert.equal(app.cards[0].animations.length,1);
- const frames=app.cards[0].animations[0].keyframes;
- assert.equal(frames.length,4,'transition settles before a restrained bounce');
- assert.equal(frames[1].transform,'translate(0,0) scale(1)');
- assert.equal(frames[2].transform,'translate(0,0) scale(1.025)');
- assert.equal(frames[3].transform,'translate(0,0) scale(1)');
- assert.equal(frames[0].transformOrigin,'center center');
- assert.equal(app.cards[0].animations[0].options.duration,900);
- app.cards.slice(3).forEach(card=>{
-  const offscreenFrames=card.animations[0].keyframes;
-  assert.equal(offscreenFrames.length,4,'offscreen cards use the full position transition too');
-  assert.match(offscreenFrames[0].transform,/^translate\(/);
-  assert.equal(offscreenFrames[0].transformOrigin,'center center');
-  assert.equal('opacity' in offscreenFrames[0],false,'opacity reveal cannot flicker above the curved canvas');
- });
+ assert.equal(vertical.target,app.grid);
 });
 
-test('switching back cancels unfinished animations and restores rail capture',()=>{
+test('the full All gallery keeps every concept card without a Partial toggle',()=>{
  const app=boot();app.evaluate('setShowcaseView("grid")');
- const first=app.cards[0].animations[0];
- app.viewButtons[0].dispatchEvent({type:'click'});
- assert.ok(first.cancelled);
- assert.equal(app.evaluate('showcaseView'),'cards');
- assert.ok(app.evaluate('carouselLimit')>0);
- arrive(app);const y=app.win.scrollY;app.wheel(120);app.advance(20);
- assert.equal(app.win.scrollY,y);assert.ok(app.grid.scrollLeft>0);
+ assert.equal(app.evaluate('showcaseView'),'grid');
+ assert.equal(app.grid.dataset.view,'grid');
+ assert.equal(app.cards[0].attributes['aria-roledescription'],'card');
+ assert.equal(app.cards.length,12);
+ assert.equal(app.viewButtons.length,0);
 });
 
 test('reduced motion changes layout without bounce animation',()=>{
  const app=boot();app.evaluate('reducedCarouselMotion.matches=true;setShowcaseView("grid")');
  assert.equal(app.evaluate('showcaseView'),'grid');
  assert.equal(app.cards[0].animations.length,0);
-});
-
-test('featured rail exposes five cards while grid mode keeps the full concept set',()=>{
- const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
- const css=readFileSync(new URL('../dist/showcase-view.css',import.meta.url),'utf8');
- const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
- assert.match(html,/data-showcase-view="cards"[^>]*>5 featured<\/button>/);
- assert.match(html,/data-showcase-view="grid"[^>]*>All concepts<\/button>/);
- assert.match(css,/\.showcase-grid\[data-view="cards"\] \.work-card:nth-child\(n\+6\)\{display:none\}/);
- assert.match(app,/function activeCarouselCards\(\)\{return showcaseView==='grid'\?carouselCards:carouselCards\.slice\(0,5\);\}/);
- assert.match(app,/carouselLimit=showcaseView==='grid'\?0:Math\.max\(0,last\.offsetLeft\+last\.offsetWidth\+gutter-grid\.clientWidth\)/);
-});
-
-test('layout measurements ignore animated card bounds and transformed scroll overflow',()=>{
- const app=boot(),pin=app.evaluate('carouselPinY');
- app.evaluate('setShowcaseView("grid");setShowcaseView("cards")');
- const limit=app.evaluate('carouselLimit');
- app.cards[0].getBoundingClientRect=()=>({top:-400,width:260,height:200,left:500});
- app.grid.scrollWidth=12000;
- app.evaluate('measureCarousel()');
- assert.equal(app.evaluate('carouselPinY'),pin,'temporary FLIP pixels cannot change the stop position');
- assert.equal(app.evaluate('carouselLimit'),limit,'temporary FLIP overflow cannot enlarge the rail');
-});
-
-test('wheel over restored cards eases back to center even when the page is below the stop',()=>{
- const app=boot();app.evaluate('setShowcaseView("grid");pageScroll.scrollTo(carouselPinY+180,{immediate:true});setShowcaseView("cards")');
- const y=app.win.scrollY;app.wheel(120);app.advance(3);
- assert.ok(app.win.scrollY<y,'recapture eases to the center rather than continuing down the page');
- app.advance(80);
- assert.equal(app.win.scrollY,app.evaluate('carouselPinY'));assert.ok(app.grid.scrollLeft>0);
-});
-
-test('an old cancelled transition cannot overwrite geometry after a rapid view change',()=>{
- const app=boot();app.evaluate('setShowcaseView("grid")');
- const first=app.cards.map(card=>card.animations[0]);app.evaluate('setShowcaseView("cards")');
- const current=app.cards.map(card=>card.animations[1]);
- first.forEach(animation=>animation.finish());
- assert.equal(app.evaluate('viewAnimations.length'),12);
- current.forEach(animation=>animation.finish());
- assert.equal(app.evaluate('viewAnimations.length'),0);
- assert.equal(app.evaluate('showcaseView'),'cards');
 });

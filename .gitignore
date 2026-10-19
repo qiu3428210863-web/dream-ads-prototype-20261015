@@ -1,5 +1,6 @@
 node_modules/
 .tools/
+.playwright-cli/browsers/
 .DS_Store
 *.log
 .env
@@ -8,3 +9,8 @@ node_modules/
 .openai/local/
 *.tar.gz
 *.zip
+
+# Local browser QA pages and generated verification artifacts
+.playwright-cli/
+dist/*-review.html
+dist/translation-review.js

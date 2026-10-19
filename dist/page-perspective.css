@@ -1,0 +1,13 @@
+/* Native perspective keeps video, typography, links and controls in the compositor. */
+.page-perspective-surface{
+ transform:perspective(1600px) rotateX(var(--page-tilt-x,0deg)) rotateY(var(--page-tilt-y,0deg)) var(--page-rest-transform,translateZ(0));
+ transform-origin:50% 50%;
+}
+.page-perspective-surface.is-page-perspective-visible{will-change:transform}
+.hero-copy.page-perspective-surface{--page-rest-transform:translateY(-38px)}
+.openart-footer-bottom.page-perspective-surface{transform-origin:50% 100%}
+@media(max-width:700px){.page-perspective-surface{perspective-origin:50% 50%}}
+@media(max-width:600px){.hero-copy.page-perspective-surface{--page-rest-transform:translateY(-52px)}}
+@media(prefers-reduced-motion:reduce),print{
+ .page-perspective-surface{transform:var(--page-rest-transform,none)!important;will-change:auto!important}
+}
