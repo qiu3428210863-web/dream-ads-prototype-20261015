@@ -67,3 +67,32 @@ html.showcase-gpu-active .work-card.is-previewing .work-visual::before{display:n
 @media(max-width:620px){.preview-dialog{width:calc(100% - 18px);border-radius:13px}.preview-stage{min-height:190px}.preview-player{padding:10px 12px 0}.player-controls{grid-template-columns:30px 60px minmax(0,1fr) 30px 30px;gap:5px}.player-volume-control{width:30px}.player-icon{width:30px;height:30px}.player-play-icon{width:20px;height:20px}.player-volume-popover{height:108px}.player-volume{width:84px}.preview-info{padding:13px 14px 18px}.preview-info p{font-size:12px}.preview-stage .preview-scene{left:14px;top:18px}}
 @media(max-width:380px){.player-controls{grid-template-columns:27px 52px minmax(0,1fr) 27px 27px;gap:3px}.player-time{font-size:10px}.player-icon,.player-volume-control{width:27px}.player-volume{width:78px}}
 @media(prefers-reduced-motion:reduce){.work-card.is-previewing .work-product{animation:none!important}.work-disc{transition:none}}
+
+/* Player-local recovery panel, inspired by familiar streaming controls. */
+.media-feedback{position:relative;z-index:9;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:16px 20px;margin:10px 0 12px;border:1px solid color-mix(in srgb,var(--ui-focus) 72%,transparent);border-radius:16px;background:var(--ui-surface);color:var(--ui-on-surface);box-shadow:0 8px 28px #0003;font-size:16px;line-height:1.45}
+.media-feedback p{min-width:0;margin:0;color:inherit;font-size:16px;font-weight:500;line-height:1.45}
+.media-feedback button{min-width:132px;min-height:54px;padding:12px 22px;border:0;border-radius:var(--ui-pill);background:var(--ui-accent);color:#fff;font-size:16px;font-weight:650;line-height:1.2;transition:background-color var(--ui-duration),transform var(--ui-duration),box-shadow var(--ui-duration)}
+.media-feedback button:hover:not(:disabled){background:var(--ui-accent-hover);transform:translateY(-1px);box-shadow:0 0 0 2.25px var(--ui-focus)}
+.media-feedback button:focus-visible{outline:2.25px solid var(--ui-focus);outline-offset:4px}
+.media-feedback button:disabled{opacity:.58;cursor:wait}
+.media-feedback[data-state="loading"]{grid-template-columns:16px minmax(0,1fr) auto;border-color:#ffffff36;background:#151515eb}
+.media-feedback[data-state="loading"]:before{content:"";width:14px;height:14px;border:2px solid #ffffff45;border-top-color:var(--ui-focus);border-radius:50%;animation:media-feedback-spin .8s linear infinite}
+.media-feedback[data-state="loading"] p{color:var(--ui-muted);font-size:14px;font-weight:450}
+.preview-player>.media-feedback{margin:10px 0 2px}
+.hero>.media-feedback{padding:13px 15px;border-radius:14px;background:#101010ed;color:#f5f5f5}
+.hero>.media-feedback p{font-size:14px}
+.hero>.media-feedback button{min-width:112px;min-height:46px;padding:10px 18px;font-size:14px}
+.challenge-step-card{position:relative}
+.challenge-step-card>.media-feedback{position:absolute;inset:12px 12px auto;margin:0;padding:12px 14px;border-radius:13px;background:#101010ed;color:#f5f5f5;font-size:14px}
+.challenge-step-card>.media-feedback p{font-size:14px}
+.challenge-step-card>.media-feedback button{min-width:100px;min-height:42px;padding:9px 14px;font-size:13px}
+.challenge-step-video{background-position:center;background-size:cover}
+.challenge-step-video video.is-media-failed,.work-hover-video.is-media-failed{opacity:0;pointer-events:none}
+.work-card{position:relative}
+.work-card>.media-feedback{position:absolute;inset:10px 10px auto;margin:0;padding:10px 12px;border-radius:12px;background:#101010ed;color:#f5f5f5;font-size:13px}
+.work-card>.media-feedback p{font-size:13px}
+.work-card>.media-feedback button{min-width:88px;min-height:40px;padding:8px 12px;font-size:13px}
+.preview-stage.has-load-error:after{display:none}
+@keyframes media-feedback-spin{to{transform:rotate(360deg)}}
+@media(max-width:520px){.media-feedback{grid-template-columns:minmax(0,1fr);gap:12px;padding:14px;border-radius:14px}.media-feedback p{font-size:15px}.media-feedback button{width:100%;min-height:48px}.media-feedback[data-state="loading"]{grid-template-columns:16px minmax(0,1fr)}.preview-player>.media-feedback{margin-top:8px}.hero>.media-feedback{inset:calc(var(--app-header-height,64px) + 10px) 10px auto auto;width:min(360px,calc(100% - 20px));padding:11px 12px}.hero>.media-feedback button{width:auto;min-width:96px}.challenge-step-card>.media-feedback{inset:8px 8px auto;padding:10px;gap:8px}.challenge-step-card>.media-feedback button{width:auto;min-width:88px}}
+@media(prefers-reduced-motion:reduce){.media-feedback[data-state="loading"]:before{animation:none}}
