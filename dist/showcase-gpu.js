@@ -140,6 +140,7 @@
   if(!hero){ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--ui-surface').trim()||'#151515';ctx.fillRect(m.left,m.top,m.width,m.height);}
   if(title&&!hero){const r=layoutRect(title.getBoundingClientRect()),s=getComputedStyle(title);ctx.font=`${s.fontWeight} ${parseFloat(s.fontSize)||23}px ${s.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle=s.color;ctx.fillText(title.innerText,r.left,r.top);}
   if(sub&&getComputedStyle(sub).display!=='none'){const r=layoutRect(sub.getBoundingClientRect()),s=getComputedStyle(sub);ctx.font=`${s.fontWeight} ${parseFloat(s.fontSize)||14}px ${s.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle=s.color;ctx.fillText(sub.innerText,r.left,r.top);}
+  const loader=card.querySelector('.media-loader');if(loader&&!loader.hidden)window.DreamMediaLoader?.draw(ctx,v,performance.now(),reducedMotion.matches);
   paintFeedback(card);
   const progress=Math.max(0,Math.min(1,Number(card.dataset.playbackProgress)||0));
   if(progress>0){const gap=6,stroke=2.25,x=v.left-gap+stroke/2,y=v.top-gap+stroke/2,w=v.width+gap*2-stroke,h=v.height+gap*2-stroke,r=24,perimeter=2*(w+h-4*r)+2*Math.PI*r;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;ctx.lineCap='round';if(progress<.999)ctx.setLineDash([perimeter*progress,perimeter*(1-progress)]);roundRect(ctx,x,y,w,h,r);ctx.stroke();ctx.restore();}
@@ -211,7 +212,16 @@
  function scheduleResize(){if(resizeRaf)return;resizeRaf=requestAnimationFrame(()=>{resizeRaf=0;resize();});}
  let nativeFrame=0;
  function scheduleRender(){if(!nativeFrame)nativeFrame=requestAnimationFrame(()=>{nativeFrame=0;render();});}
- document.addEventListener('dream:card-progress',event=>{const item=cards.find(candidate=>candidate.card===event.target);if(item){item.dirty=true;scheduleRender();}});
+ let loaderFrame=0;
+ function animateLoaders(){
+  if(loaderFrame)return;
+  const tick=()=>{loaderFrame=0;let visibleLoading=false;for(const item of cards){if(item.hoverVideo?.dataset.feedbackState==='loading'){const r=item.card.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth){item.dirty=true;visibleLoading=true;}}}render();if(visibleLoading&&!suspended&&!document.hidden&&!reducedMotion.matches)loaderFrame=requestAnimationFrame(tick);};
+  tick();
+ }
+ addEventListener('scroll',animateLoaders,{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)animateLoaders();});
+ document.addEventListener('dream:media-state',event=>{const item=cards.find(candidate=>candidate.hoverVideo===event.detail.video);if(item){item.dirty=true;render();if(event.detail.state==='loading')animateLoaders();}});
+ document.addEventListener('dream:card-progress' ,event=>{const item=cards.find(candidate=>candidate.card===event.target);if(item){item.dirty=true;scheduleRender();}});
  resize();
  window.DreamScroll?.onFrame(()=>render());
  addEventListener('scroll',scheduleRender,{passive:true});
