@@ -210,7 +210,7 @@ test('registration accepts and saves a required video attachment with the local 
 
 test('gallery hover playback uses compressed full-length previews while dialogs retain source video',()=>{
  const clips=[...appSource.matchAll(/\{id:'([^']+)'[^}]*videoSrc:'([^']+)'/g)];
- assert.equal(clips.length,21,'each gallery concept has a source video');
+ assert.equal(clips.length,22,'each gallery concept has a source video');
  assert.match(appSource,/data-video-src="\$\{c\.videoSrc\|\|''\}" data-preview-video-src="\$\{c\.videoSrc\?`assets\/card-previews\/\$\{c\.id\}\.mp4`/,'cards keep the original video for the detail player and point hover playback at the compressed file');
  assert.match(appSource,/dataset\.previewVideoSrc\|\|button\?\.dataset\.videoSrc/,'hover and metadata preloads use the compact preview with a source fallback');
  for(const [,id] of clips)assert.ok(existsSync(new URL(`../dist/assets/card-previews/${id}.mp4`,import.meta.url)),`${id} has a compressed preview`);
