@@ -35,7 +35,7 @@ main h1,main section:not(.hero):not(.creative-cta) h2{letter-spacing:-.04em}
 .preview-player>.media-feedback{margin:0 0 12px}
 input,textarea{caret-color:var(--ui-accent)}
 a{text-underline-offset:.2em}
-@media(max-width:720px){.section-heading,.challenge-heading,.challenge-steps-heading{margin-bottom:24px}.challenge-step-copy{padding-top:16px}.player-controls{grid-template-columns:44px 70px minmax(0,1fr) 44px 44px;gap:4px}.preview-player{padding-inline:8px}.player-volume-control{width:44px}.player-icon{width:44px;height:44px}.player-time{font-size:11px}.hero>.media-feedback{inset:auto 12px 8px;max-width:calc(100% - 24px)}}
+@media(max-width:720px){.section-heading,.challenge-heading,.challenge-steps-heading{margin-bottom:24px}.challenge-step-copy{padding-top:16px}.player-controls{grid-template-columns:44px max-content minmax(0,1fr) 44px 44px;gap:4px}.preview-player{padding-inline:8px}.player-volume-control{width:44px}.player-icon{width:44px;height:44px}.player-time{font-size:11px}.hero>.media-feedback{inset:auto 12px 8px;max-width:calc(100% - 24px)}}
 @media(prefers-reduced-motion:reduce){.button,.media-feedback button{transition:none}}
 /* Primary CTA hover and detached focus frame share one palette. */
 html body .header .button.dark:is(:hover,:focus-visible),html body .hero .button.dark:is(:hover,:focus-visible),html body .final-cta.creative-cta .button.dark:is(:hover,:focus-visible){background:var(--ui-accent);border-color:var(--ui-accent);color:#fff}
