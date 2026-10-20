@@ -3,7 +3,7 @@
 #showcase-grid .work-card{height:auto;min-height:0;align-self:start}
 #showcase-grid .work-open{height:auto;min-height:0}
 #showcase-grid .work-meta{min-height:0;height:auto;padding:12px 4px 10px}
-#showcase-grid .work-card>.media-feedback{position:absolute;inset:10px 10px auto;margin:0;z-index:9}
+#showcase-grid .work-card>.media-feedback{position:absolute;inset:0 auto auto 0;margin:0;z-index:20}
 #showcase-grid .work-visual,#showcase-grid .work-cover{transform:none!important;transition:none}
 #showcase-grid .work-cover{background:var(--ui-surface)!important}
 #showcase-grid .work-product.work-poster{animation:none!important;transform:scale(1)!important;transition:transform .32s ease-out}
