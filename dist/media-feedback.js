@@ -3,12 +3,13 @@
  const bindings=new WeakMap();
  // One vector and timing model for native players and the desktop GPU card copy.
  let ringLength=200;
- const ringPath='M8 15 C8 12 10 11 13 13 L49 42 C64 55 91 47 91 29 C91 11 71 4 57 16 L14 48 C11 50 8 49 8 46 Z';
+ // Open ends intentionally break the descending strand beneath the rising strand.
+ const ringPath='M26 24 L11 11 Q5 6 5 15 V45 Q5 51 11 47 L59 11 C74 -2 94 9 94 30 C94 51 73 63 57 50 L42 36';
  const ease=t=>t*t*(3-2*t);
  const growth=now=>{const t=(now%2400)/2400;return t<.65?{length:ease(t/.65),offset:0}:{length:1-ease((t-.65)/.35),offset:ease((t-.65)/.35)};};
- globalThis.DreamMediaLoader={growth,draw(ctx,rect,now,reduced){
+ globalThis.DreamMediaLoader={growth,path:ringPath,draw(ctx,rect,now,reduced){
   const small=rect.height<180,size=small?44:68,x=rect.left+rect.width/2,y=rect.top+rect.height/2-(small?10:14),phase=growth(now);
-  ctx.save();ctx.fillStyle='#0d0b14a8';ctx.fillRect(rect.left,rect.top,rect.width,rect.height);ctx.translate(x,y);ctx.save();ctx.scale(size/100,size/100);ctx.translate(-50,-30);ctx.lineWidth=6;ctx.lineJoin='round';ctx.lineCap='round';const path=new Path2D(ringPath);ctx.strokeStyle='#ffffff26';ctx.stroke(path);ctx.strokeStyle='#fff';ctx.setLineDash(reduced?[]:[Math.max(.001,ringLength*phase.length),ringLength*2]);ctx.lineDashOffset=reduced?0:-ringLength*phase.offset;ctx.stroke(path);ctx.restore();
+  ctx.save();ctx.fillStyle='#0d0b14a8';ctx.fillRect(rect.left,rect.top,rect.width,rect.height);ctx.translate(x,y);ctx.save();ctx.scale(size/100,size/100);ctx.translate(-50,-30);ctx.lineWidth=7.5;ctx.lineJoin='round';ctx.lineCap='round';const path=new Path2D(ringPath);ctx.strokeStyle='#fff';ctx.setLineDash(reduced?[]:[Math.max(.001,ringLength*phase.length),ringLength*2]);ctx.lineDashOffset=reduced?0:-ringLength*phase.offset;ctx.stroke(path);ctx.restore();
   const font=small?11:14;ctx.font=`500 ${font}px Arial,sans-serif`;ctx.textBaseline='middle';ctx.textAlign='left';const label='Loading video',width=ctx.measureText(label).width,start=-width/2-5,baseline=size*.3+(small?16:21);ctx.fillStyle='#f5f3fa';ctx.fillText(label,start,baseline);
   for(let i=0;i<3;i++){const t=((now-i*160)%1500+1500)%1500/1500,lift=reduced?0:Math.sin(Math.PI*Math.min(1,t/.8));ctx.globalAlpha=reduced?1:.25+.75*lift;ctx.fillText('.',start+width+3+i*4,baseline-4*lift);}ctx.restore();
  }};
@@ -29,7 +30,7 @@
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(fit).observe(frame);
   frame.querySelectorAll(':scope > .media-loader').forEach(node=>node.remove());
   const loader=document.createElement('span');loader.className='media-loader';loader.hidden=true;loader.setAttribute('role','status');loader.setAttribute('aria-label','Loading video');loader.setAttribute('translate','no');
-  loader.innerHTML='<svg viewBox="0 0 100 60" aria-hidden="true"><path class="media-loader-track" d="'+ringPath+'"/><path class="media-loader-ring" pathLength="200" d="'+ringPath+'"/></svg><span class="media-loading-label" aria-hidden="true">Loading video<span class="media-loading-dots"><span>.</span><span>.</span><span>.</span></span></span>';
+  loader.innerHTML='<svg viewBox="0 0 100 60" aria-hidden="true"><path class="media-loader-ring" pathLength="200" d="'+ringPath+'"/></svg><span class="media-loading-label" aria-hidden="true">Loading video<span class="media-loading-dots"><span>.</span><span>.</span><span>.</span></span></span>';
   frame.append(loader);ringLength=loader.querySelector('path')?.getTotalLength?.()||ringLength;
   let timer=0;
   const clear=()=>{clearTimeout(timer);timer=0;};

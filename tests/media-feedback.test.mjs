@@ -37,3 +37,11 @@ test('growth fills the complete ring then clears the tail and loops without a ro
 test('failure survives source cleanup until an actual retry or playback occurs',()=>{
  const f=fixture();f.video.handlers.error();f.video.handlers.emptied();assert.equal(f.box.dataset.state,'error');assert.equal(f.box.hidden,false);
 });
+
+test('loading mark has a real open crossing and no gray underlay in native or GPU rendering',()=>{
+ const f=fixture();assert.doesNotMatch(f.loader.innerHTML,/media-loader-track/);assert.equal((f.loader.innerHTML.match(/<path /g)||[]).length,1);assert.match(f.model.path,/^M26 24/);assert.match(f.model.path,/L42 36$/);assert.doesNotMatch(f.model.path,/Z/i);
+ const strokes=[],colors=[];const ctx={save(){},restore(){},fillRect(){},translate(){},scale(){},setLineDash(){},stroke(path){strokes.push(path);colors.push(this.strokeStyle);},measureText(){return {width:80};},fillText(){}};
+ // GPU path uses the same vector and only one white stroke per animation frame.
+ const script=source;
+ const document={querySelectorAll:()=>[],addEventListener(){}};const env={document,WeakMap,Path2D:class{constructor(path){this.path=path;}}};vm.runInNewContext(script,env);env.DreamMediaLoader.draw(ctx,{left:0,top:0,width:320,height:180},1200,false);assert.equal(strokes.length,1);assert.equal(strokes[0].path,f.model.path);assert.deepEqual(colors,['#fff']);
+});
