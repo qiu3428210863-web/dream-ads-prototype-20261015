@@ -62,7 +62,8 @@
 @keyframes thumb-product-loop{0%,100%{transform:translateY(1%) scale(.96) rotate(-2deg)}50%{transform:translateY(-3%) scale(1.02) rotate(2deg)}}
 /* Keep the disc visible as a modest peek above the active sleeve. */
 .work-disc{width:40%;top:-2%;transition:transform .55s cubic-bezier(.2,.75,.2,1),opacity .2s ease}
-.work-card:hover .work-disc,.work-card:focus-within .work-disc{transform:translate(-50%,-17%) rotate(8deg)}
+.work-card:has(>.work-open:focus-visible) .work-disc{transform:translate(-50%,-17%) rotate(8deg)}
+@media(hover:hover) and (pointer:fine){.work-card:hover .work-disc{transform:translate(-50%,-17%) rotate(8deg)}}
 html.showcase-gpu-active .work-card.is-previewing .work-visual::before{display:none}
 @media(max-width:620px){.preview-dialog{width:calc(100% - 18px);border-radius:13px}.preview-stage{min-height:190px}.preview-player{padding:10px 12px 0}.player-controls{grid-template-columns:30px 60px minmax(0,1fr) 30px 30px;gap:5px}.player-volume-control{width:30px}.player-icon{width:30px;height:30px}.player-play-icon{width:20px;height:20px}.player-volume-popover{height:108px}.player-volume{width:84px}.preview-info{padding:13px 14px 18px}.preview-info p{font-size:12px}.preview-stage .preview-scene{left:14px;top:18px}}
 @media(max-width:380px){.player-controls{grid-template-columns:27px 52px minmax(0,1fr) 27px 27px;gap:3px}.player-time{font-size:10px}.player-icon,.player-volume-control{width:27px}.player-volume{width:78px}}
