@@ -47,13 +47,13 @@ test('restored pointer focus cannot keep a disc out; suppression and open dialog
  const parts={card:{classList:{contains:()=>suppressed},matches:()=>hover},owner:{classList:{contains:c=>c==='hero-card-grid'?hero:interacting}},open:{matches:()=>focusVisible}};
  assert.equal(sandbox.active(parts),false,'pointer focus alone is not keyboard focus');
  hover=true;assert.equal(sandbox.active(parts),true);suppressed=true;assert.equal(sandbox.active(parts),false);suppressed=false;dialog=true;assert.equal(sandbox.active(parts),false);
- dialog=false;hover=false;focusVisible=true;assert.equal(sandbox.active(parts),true,'keyboard navigation still exposes the disc');hero=true;assert.equal(sandbox.active(parts),false);hero=false;interacting=true;assert.equal(sandbox.active(parts),false);interacting=false;focusVisible=false;hover=true;sandbox.hoverInput.matches=false;assert.equal(sandbox.active(parts),false,'touch hover never sticks');
+ dialog=false;hover=false;focusVisible=true;assert.equal(sandbox.active(parts),true,'keyboard navigation still exposes the disc');hero=true;assert.equal(sandbox.active(parts),false);hover=true;assert.equal(sandbox.active(parts),false,'hero cards never show CDs, even on hover');hover=false;hero=false;interacting=true;assert.equal(sandbox.active(parts),false);interacting=false;focusVisible=false;hover=true;sandbox.hoverInput.matches=false;assert.equal(sandbox.active(parts),false,'touch hover never sticks');
 });
 test('only the explicitly marked uploaded example gets a gallery badge',()=>{
  const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),start=app.indexOf('function conceptCardMarkup('),end=app.indexOf('function startHeroCopyEntrance(',start),sandbox={};
  vm.runInNewContext(app.slice(start,end)+';globalThis.card=conceptCardMarkup;',sandbox);
  const concept={id:'demo',title:'Demo',product:'Demo',headline:'Demo',thumbnailUrl:'poster.webp',videoSrc:'demo.mp4'};
- assert.doesNotMatch(sandbox.card(concept,0,2),/work-example-badge/);assert.match(sandbox.card({...concept,example:true},0,2),/work-example-badge/);assert.doesNotMatch(sandbox.card({...concept,example:true},0,2,true),/work-example-badge/);
+ assert.doesNotMatch(sandbox.card(concept,0,2),/work-example-badge/);assert.match(sandbox.card({...concept,example:true},0,2),/work-example-badge/);assert.doesNotMatch(sandbox.card({...concept,example:true},0,2,true),/work-example-badge/);assert.doesNotMatch(sandbox.card(concept,0,2,true),/work-disc/);assert.match(sandbox.card(concept,0,2),/work-disc/);
  assert.equal((app.match(/example:true/g)||[]).length,1);
 });
 
@@ -75,4 +75,12 @@ test('detached outlines keep the same four corner centers as the thumbnail at ev
   assert.equal(o.left-stroke/2,r.left-gap);assert.equal(o.top-stroke/2,r.top-gap);
   assert.equal(o.radius+stroke/2,radius+gap);
  }
+});
+
+test('hero textures reserve stable space on every side for detached playback outlines',()=>{
+ const sandbox={frame:null,layoutRect:r=>r};vm.runInNewContext(extract(' function prepareFrame(', ' function updateTexture(')+';globalThis.prepare=prepareFrame;',sandbox);
+ const rect={left:100,top:100,width:320,height:180},item={card:{offsetWidth:320,offsetHeight:180}},f=sandbox.prepare(item,rect);
+ assert.ok(f.textureBounds.left<=rect.left-8);assert.ok(f.textureBounds.top<=rect.top-8);
+ assert.ok(f.textureBounds.left+f.textureBounds.width>=rect.left+rect.width+8);assert.ok(f.textureBounds.top+f.textureBounds.height>=rect.top+rect.height+8);
+ assert.equal(f.displayBounds.left,92);assert.equal(f.displayBounds.width,336);
 });

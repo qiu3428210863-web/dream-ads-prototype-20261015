@@ -141,7 +141,7 @@ test('hero repeats the actual showcase sleeves instead of the miniature Up next 
  assert.doesNotMatch(heroCss,/--card-scale|scale\(var\(--card-scale\)\)/,'featured card size does not change by carousel position');
  assert.match(heroCss,/\.work-card:not\(\[data-carousel-distance="0"\]\):hover\{--hover-lift:-9px\}/,'only side cards lift smoothly on hover');
  assert.match(heroCss,/\.hero-card-grid\.showcase-grid \.work-card\{flex:0 0 var\(--hero-card-width,280px\);padding:0;border:0;[^}]*background:transparent/,'hero sleeves have no black card backing');
- assert.match(heroCss,/\.hero-card-grid \.work-card:focus-within \.work-disc\{opacity:0!important/,'click focus cannot leave a featured disc permanently popped out');
+ assert.match(heroCss,/\.hero-card-grid \.work-disc\{display:none!important/,'featured cards never show CD sleeves');
  assert.match(heroCss,/\.hero-card-grid \.work-card\.is-hero-active \.work-visual::after\{opacity:1;background:var\(--arena-pink,#ff82db\)\}/,'active progress matches the page pink variable');
  assert.match(heroCss,/\.hero-card-rail\{position:absolute[^}]*bottom:clamp\(28px,4vh,40px\)/,'the hero card row sits slightly above the bottom edge');
  assert.match(showcaseGpuSource,/Number\(card\.dataset\.playbackProgress\)/,'the featured card frame follows actual video progress');
