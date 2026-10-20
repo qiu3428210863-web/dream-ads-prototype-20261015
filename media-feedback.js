@@ -42,7 +42,7 @@
    if(isWork){video.classList.add('is-media-failed');workCard?.classList.remove('has-video-source','is-previewing','is-hover-ready');}
   };
   const failed=(text,reason='error',action='Try again')=>{fit();retry.textContent=action;title.textContent=reason==='permission'?'Ready when you are':navigator.onLine===false?'You are offline':reason==='timeout'?'Taking longer than expected':'Video unavailable';state('error',text);fallback(reason);};
-  const loading=()=>{state('loading','Loading video\u2026');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(!isPreview&&!isHero&&video.paused)){state('ready','');return;}video.pause();failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video is taking too long to load. Check your connection, then try again.','timeout');},15000);};
+  const loading=()=>{state('loading','Loading video\u2026');timer=setTimeout(()=>{if(!video.isConnected||document.hidden||(globalThis.DreamMobilePlayback?.mobile.matches&&globalThis.DreamMobilePlayback.visibility(video).ratio<.25)||(!isPreview&&!isHero&&video.paused)){state('ready','');return;}video.pause();failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video is taking too long to load. Check your connection, then try again.','timeout');},15000);};
   video.addEventListener('loadstart',()=>{if(isPreview||isHero||!video.paused)loading();});
   video.addEventListener('waiting',loading);video.addEventListener('stalled',()=>{if(!video.paused)loading();});
   video.addEventListener('playing',()=>{video.classList.remove('is-media-failed');if(isStep)stepVideo.style.backgroundImage='';if(isWork)workCard?.classList.add('has-video-source','is-previewing','is-hover-ready');state('ready','');});
@@ -51,6 +51,7 @@
   video.addEventListener('emptied',()=>{if(box.dataset.state==='loading')state('ready','');});
   video.addEventListener('play',()=>{if(video.readyState<3)loading();});
   video.addEventListener('error',()=>failed(navigator.onLine===false?'You are offline. Reconnect, then try again.':'Video could not play. Check your connection, then try again.'));
+  video.addEventListener('dream:autoplay-blocked',()=>state('ready',''));
   video.addEventListener('dream:play-rejected',event=>{if(event.detail?.name==='AbortError')return;const blocked=event.detail?.name==='NotAllowedError';retry.textContent=blocked?'Play video':'Try again';failed(blocked?'Playback needs your permission. Select Play video to start.':'Video could not play. Try again.',blocked?'permission':'play',blocked?'Play video':'Try again');});
   retry.addEventListener('click',event=>{event?.stopPropagation?.();
    if(isPreview){retry.textContent='Try again';loading();document.dispatchEvent(new CustomEvent('dream:retry-preview'));return;}
@@ -59,10 +60,11 @@
    if(isWork){const button=workCard?.querySelector('[data-preview]'),src=button?.dataset.previewVideoSrc||button?.dataset.videoSrc;if(src){video.classList.remove('is-media-failed');video.src=src;video.dataset.loadedSource=src;workCard.classList.add('has-video-source','is-previewing');}retry.textContent='Try again';loading();video.load();video.play().catch(error=>video.dispatchEvent(new CustomEvent('dream:play-rejected',{detail:{name:error.name}})));}
   });
   if(isWork)host.addEventListener('pointerleave',()=>{if(box.dataset.state!=='ready'){state('ready','');video.classList.remove('is-media-failed');}});
-  bindings.set(video,{box,clear});
+  bindings.set(video,{box,clear,suspend:()=>{if(box.dataset.state==='loading')state('ready','');}});
   if(video.error)failed('Video could not play. Check your connection, then try again.');else if(video.readyState<3&&!video.paused)loading();
  }
  const scan=()=>document.querySelectorAll('.hero-video,.challenge-step-video video,#preview-video,.work-hover-video').forEach(bind);
  scan();document.addEventListener('dream:translation-layout',scan);
+ document.addEventListener('dream:viewport-media',()=>{const mobile=globalThis.DreamMobilePlayback;if(mobile?.mobile.matches)document.querySelectorAll('video').forEach(video=>{if(video.paused&&mobile.visibility(video).ratio<.25)bindings.get(video)?.suspend();});});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)document.querySelectorAll('video').forEach(video=>bindings.get(video)?.clear());});
 })();
