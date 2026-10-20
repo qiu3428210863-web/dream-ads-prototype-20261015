@@ -45,3 +45,7 @@ test('loading mark has a real open crossing and no gray underlay in native or GP
  const script=source;
  const document={querySelectorAll:()=>[],addEventListener(){}};const env={document,WeakMap,Path2D:class{constructor(path){this.path=path;}}};vm.runInNewContext(script,env);env.DreamMediaLoader.draw(ctx,{left:0,top:0,width:320,height:180},1200,false);assert.equal(strokes.length,1);assert.equal(strokes[0].path,f.model.path);assert.deepEqual(colors,['#fff']);
 });
+
+test('autoplay policy suspension removes loading UI without reporting a failed video',()=>{
+ const f=fixture();f.video.handlers.waiting();f.video.handlers['dream:autoplay-blocked']();assert.equal(f.loader.hidden,true);assert.equal(f.box.hidden,true);assert.equal(f.video.dataset.feedbackState,'ready');assert.equal(f.timers.size,0);
+});
