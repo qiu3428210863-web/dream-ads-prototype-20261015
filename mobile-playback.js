@@ -22,6 +22,7 @@
  const sourceKey=video=>video.dataset.playlistSrc||video.dataset.loadedSource||video.currentSrc||video.src||'';
  function recover(video){
   if(!eligible(video))return;
+  if(video.paused)blocked.add(video);
   const source=sourceKey(video);let state=recoveries.get(video);
   if(!state||state.source!==source){if(state?.timer)clearTimeout(state.timer);state={source,count:0,timer:0};recoveries.set(video,state);}
   if(state.timer||state.count>=3)return;
