@@ -128,7 +128,7 @@
 .disc-art img{display:block;width:100%;height:100%;object-fit:contain;transform:translateY(-22%) scale(1.15) rotate(-8deg);opacity:.88}
 .disc-art::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 15%,#d4f8ff77 21%,transparent 27% 49%,#ffe6ff88 57%,transparent 66% 83%,#fff9d466 90%,transparent);mix-blend-mode:screen}
 .disc-hub{position:absolute;left:50%;top:50%;width:19%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #ffffffd9;background:radial-gradient(circle,transparent 0 34%,#a5a8b5 37% 42%,#e2e4ebbb 44% 64%,#fff9 66% 75%,#9692a7 77%);box-shadow:0 0 0 2px #c7c2ce88}
-.work-card:focus-within .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}
+.work-card:has(>.work-open:focus-visible) .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}
 .work-card.suppress-hover-effects .work-disc{opacity:0!important;transform:translate(-50%,0)!important}
-@media(hover:hover){.work-card:hover .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}}
-@media(prefers-reduced-motion:reduce){.work-disc{transition:none;transform:translate(-50%,0)}.work-card:hover .work-disc,.work-card:focus-within .work-disc{transform:translate(-50%,-18%)}}
+@media(hover:hover) and (pointer:fine){.work-card:hover .work-disc{opacity:1;transform:translate(-50%,-22%) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){.work-disc{transition:none;transform:translate(-50%,0)}.work-card:hover .work-disc,.work-card:has(>.work-open:focus-visible) .work-disc{transform:translate(-50%,-18%)}}

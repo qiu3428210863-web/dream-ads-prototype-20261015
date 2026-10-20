@@ -104,8 +104,13 @@
   ctx.save();ctx.filter=filter;ctx.drawImage(image,(sourceWidth-cropWidth)/2,(sourceHeight-cropHeight)/2,cropWidth,cropHeight,rect.left,rect.top,rect.width,rect.height);ctx.restore();
  }
  function productBackground(){return getComputedStyle(root).getPropertyValue('--ui-surface').trim()||'#151515';}
+ function discIsActive(parts){
+  const {card,owner,open}=parts;
+  if(card.classList.contains('suppress-hover-effects')||owner.classList.contains('is-interacting')||document.querySelector('dialog[open]'))return false;
+  return hoverInput.matches&&card.matches(':hover')||!owner.classList.contains('hero-card-grid')&&Boolean(open?.matches(':focus-visible'));
+ }
  function paintDisc(parts){
-  const {disc,discImage:img,card,owner}=parts,hero=owner.classList.contains('hero-card-grid');if(!disc||hero&&card.matches(':focus-within')||(!card.matches(':hover')&&!card.matches(':focus-within')))return;
+  const {disc,discImage:img,card,owner}=parts,hero=owner.classList.contains('hero-card-grid');if(!disc||!discIsActive(parts))return;
   const r=layoutRect(disc.getBoundingClientRect());if(r.bottom<-120||r.top>innerHeight+120)return;
   const cx=r.left+r.width/2,cy=r.top+r.height/2;
   const colors=['#d8dce1','#f9fdff','#afc8d9','#efd4ef','#faffff','#abb8bd','#e1d4f0','#fffcea','#b8dcdf','#f8ebf4','#d8dce1'];

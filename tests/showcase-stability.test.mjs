@@ -39,3 +39,29 @@ test('repeated playback resumes keep only one GPU video-frame subscription',()=>
  sandbox.start(item);assert.equal(callbacks.size,1);stale();assert.equal(callbacks.size,1);assert.equal(renders,2);
  sandbox.stop(item);assert.equal(callbacks.size,0);
 });
+
+test('restored pointer focus cannot keep a disc out; suppression and open dialogs win over hover',()=>{
+ let hover=false,focusVisible=false,suppressed=false,dialog=false,interacting=false,hero=false;
+ const sandbox={hoverInput:{matches:true},document:{querySelector:()=>dialog?{}:null}};
+ vm.runInNewContext(extract(' function discIsActive(', ' function paintDisc(')+';globalThis.active=discIsActive;',sandbox);
+ const parts={card:{classList:{contains:()=>suppressed},matches:()=>hover},owner:{classList:{contains:c=>c==='hero-card-grid'?hero:interacting}},open:{matches:()=>focusVisible}};
+ assert.equal(sandbox.active(parts),false,'pointer focus alone is not keyboard focus');
+ hover=true;assert.equal(sandbox.active(parts),true);suppressed=true;assert.equal(sandbox.active(parts),false);suppressed=false;dialog=true;assert.equal(sandbox.active(parts),false);
+ dialog=false;hover=false;focusVisible=true;assert.equal(sandbox.active(parts),true,'keyboard navigation still exposes the disc');hero=true;assert.equal(sandbox.active(parts),false);hero=false;interacting=true;assert.equal(sandbox.active(parts),false);interacting=false;focusVisible=false;hover=true;sandbox.hoverInput.matches=false;assert.equal(sandbox.active(parts),false,'touch hover never sticks');
+});
+test('only the explicitly marked uploaded example gets a gallery badge',()=>{
+ const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),start=app.indexOf('function conceptCardMarkup('),end=app.indexOf('function startHeroCopyEntrance(',start),sandbox={};
+ vm.runInNewContext(app.slice(start,end)+';globalThis.card=conceptCardMarkup;',sandbox);
+ const concept={id:'demo',title:'Demo',product:'Demo',headline:'Demo',thumbnailUrl:'poster.webp',videoSrc:'demo.mp4'};
+ assert.doesNotMatch(sandbox.card(concept,0,2),/work-example-badge/);assert.match(sandbox.card({...concept,example:true},0,2),/work-example-badge/);assert.doesNotMatch(sandbox.card({...concept,example:true},0,2,true),/work-example-badge/);
+ assert.equal((app.match(/example:true/g)||[]).length,1);
+});
+
+test('minor pointer movement inside a returned card cannot undo disc suppression',()=>{
+ const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),start=app.indexOf('const clearSuppression=event=>'),end=app.indexOf(";document.addEventListener('pointermove',clearSuppression,true)",start);let removed=0;const inside={};
+ const sandbox={returningCard:{contains:target=>target===inside,classList:{remove:()=>removed++}},document:{removeEventListener(){}}};
+ vm.runInNewContext(app.slice(start,end)+';globalThis.clear=clearSuppression;',sandbox);
+ sandbox.clear({type:'pointermove',target:inside});assert.equal(removed,0);
+ sandbox.clear({type:'pointermove',target:{}});assert.equal(removed,1);
+ sandbox.clear({type:'keydown',target:inside});assert.equal(removed,2,'fresh keyboard input resumes normal interaction');
+});
