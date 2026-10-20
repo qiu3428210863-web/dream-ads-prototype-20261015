@@ -28,7 +28,7 @@
 #preview-play[data-state="playing"] .pause-shape,#preview-play[data-state="paused"] .play-shape,#preview-play[data-state="ended"] .replay-shape{display:block}
 .player-icon:disabled{opacity:.38;cursor:not-allowed}
 .player-time{font:12px/1 Arial,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;color:#ddd}
-.player-seek{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:0;border:0;border-radius:99px;background:linear-gradient(90deg,#ff82db 0 var(--range-progress,0%),#595959 var(--range-progress,0%) 100%);cursor:pointer}
+.player-seek{appearance:none;-webkit-appearance:none;width:100%;min-width:0;max-width:100%;height:4px;margin:0;border:0;border-radius:99px;background:linear-gradient(90deg,#ff82db 0 var(--range-progress,0%),#595959 var(--range-progress,0%) 100%);cursor:pointer}
 .player-seek::-webkit-slider-runnable-track{height:4px;border-radius:99px;background:transparent}
 .player-seek::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:13px;height:13px;margin-top:-4.5px;border:0;border-radius:50%;background:#ff82db;box-shadow:0 0 0 3px #ff82db20;transition:box-shadow .18s ease,transform .18s ease}
 .player-seek:hover::-webkit-slider-thumb{transform:scale(1.12);box-shadow:0 0 0 5px #ff82db26}
@@ -65,8 +65,8 @@
 .work-card:has(>.work-open:focus-visible) .work-disc{transform:translate(-50%,-17%) rotate(8deg)}
 @media(hover:hover) and (pointer:fine){.work-card:hover .work-disc{transform:translate(-50%,-17%) rotate(8deg)}}
 html.showcase-gpu-active .work-card.is-previewing .work-visual::before{display:none}
-@media(max-width:620px){.preview-dialog{width:calc(100% - 18px);border-radius:13px}.preview-stage{min-height:190px}.preview-player{padding:10px 12px 0}.player-controls{grid-template-columns:30px 60px minmax(0,1fr) 30px 30px;gap:5px}.player-volume-control{width:30px}.player-icon{width:30px;height:30px}.player-play-icon{width:20px;height:20px}.player-volume-popover{height:108px}.player-volume{width:84px}.preview-info{padding:13px 14px 18px}.preview-info p{font-size:12px}.preview-stage .preview-scene{left:14px;top:18px}}
-@media(max-width:380px){.player-controls{grid-template-columns:27px 52px minmax(0,1fr) 27px 27px;gap:3px}.player-time{font-size:10px}.player-icon,.player-volume-control{width:27px}.player-volume{width:78px}}
+@media(max-width:620px){.preview-dialog{width:calc(100% - 18px);border-radius:13px}.preview-stage{min-height:190px}.preview-player{padding:10px 12px 0}.player-controls{grid-template-columns:44px max-content minmax(0,1fr) 44px 44px;gap:5px}.player-volume-control{width:30px}.player-icon{width:30px;height:30px}.player-play-icon{width:20px;height:20px}.player-volume-popover{height:108px}.player-volume{width:84px}.preview-info{padding:13px 14px 18px}.preview-info p{font-size:12px}.preview-stage .preview-scene{left:14px;top:18px}}
+@media(max-width:380px){.player-controls{grid-template-columns:44px max-content minmax(0,1fr) 44px 44px;gap:3px}.player-time{font-size:10px}.player-icon,.player-volume-control{width:27px}.player-volume{width:78px}}
 @media(prefers-reduced-motion:reduce){.work-card.is-previewing .work-product{animation:none!important}.work-disc{transition:none}}
 
 /* Feedback belongs to the image area, never below the player controls. */
