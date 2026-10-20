@@ -65,3 +65,14 @@ test('minor pointer movement inside a returned card cannot undo disc suppression
  sandbox.clear({type:'pointermove',target:{}});assert.equal(removed,1);
  sandbox.clear({type:'keydown',target:inside});assert.equal(removed,2,'fresh keyboard input resumes normal interaction');
 });
+
+test('detached outlines keep the same four corner centers as the thumbnail at every layout radius',()=>{
+ const sandbox={};vm.runInNewContext(extract(' function outlineGeometry(', ' function paintCard(')+';globalThis.outline=outlineGeometry;',sandbox);
+ for(const radius of [12,14,18])for(const stroke of [1.25,2.25]){
+  const r={left:48,top:100,width:320,height:180},gap=6,o=sandbox.outline(r,radius,gap,stroke);
+  assert.equal(o.left+o.radius,r.left+radius);assert.equal(o.top+o.radius,r.top+radius);
+  assert.equal(o.left+o.width-o.radius,r.left+r.width-radius);assert.equal(o.top+o.height-o.radius,r.top+r.height-radius);
+  assert.equal(o.left-stroke/2,r.left-gap);assert.equal(o.top-stroke/2,r.top-gap);
+  assert.equal(o.radius+stroke/2,radius+gap);
+ }
+});

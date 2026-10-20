@@ -229,10 +229,11 @@ test('the concept gallery keeps only the full All view',()=>{
 });
 
 test('showcase hover keeps the detached thin frame and thumbnail scale motion',()=>{
- assert.match(showcaseGpuSource,/roundRect\(ctx,v\.left-gap\+stroke\/2,v\.top-gap\+stroke\/2,v\.width\+gap\*2-stroke,v\.height\+gap\*2-stroke,24\)/);
+ assert.match(showcaseGpuSource,/outlineGeometry\(v,visualRadius,outlineGap,stroke\)/,'outline follows the actual thumbnail radius');
  assert.match(showcaseCss,/\.work-open:hover \.work-visual\{transform:scale\(\.997\)\}/);
  assert.match(showcaseCss,/\.work-open:hover \.work-cover\{transform:scale\(1\.003009\)\}/);
- assert.match(showcaseCss,/inset:-6px;border-radius:24px;padding:1\.25px/);
+ assert.match(showcaseCss,/border-radius:calc\(var\(--work-radius\) \+ var\(--work-outline-gap\)\)/);
+ assert.match(showcaseCss,/--work-outline-gap:6px;--work-outline-stroke:1\.25px/);
 });
 
 test('section headings and content below the gallery rise into view once',()=>{
