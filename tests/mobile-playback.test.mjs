@@ -64,3 +64,7 @@ test('multiple readiness events cannot issue duplicate pending play requests',as
 test('a progressing ready video is not restarted by repeated viewport notifications',async()=>{
  const f=fixture(),v=f.media();v.paused=false;v.readyState=4;await f.api.attempt(v);assert.equal(v.calls,0);
 });
+
+test('an unexpected visible pause can also resume on the next ordinary touch',async()=>{
+ const f=fixture(),v=f.media();v.readyState=4;f.api.recover(v);f.handlers.get('touchstart')();await new Promise(resolve=>setImmediate(resolve));assert.equal(v.calls,1);assert.equal(v.paused,false);
+});
