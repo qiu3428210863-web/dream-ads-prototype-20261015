@@ -61,3 +61,15 @@ test('fatal video failure restores a ready poster instead of leaving a black med
  vm.runInContext(error,h.context);
  assert.equal(h.video.classList.contains('is-switching'),true);assert.equal(h.poster.classList.contains('is-visible'),true);
 });
+
+function playbackHarness(){
+ const calls={play:0,pause:0},video={dataset:{},readyState:2,muted:false,defaultMuted:false,playsInline:false,paused:true,setAttribute(){},play(){calls.play++;return Promise.resolve();},pause(){calls.pause++;this.paused=true;}},mobile={mobile:{matches:true},visibility:()=>({ratio:1}),attempt:v=>{calls.play++;v.paused=false;return Promise.resolve();}};
+ const env={heroVideo:video,heroSection:{},heroMotion:{matches:false},heroVisible:true,heroCanPlay:false,heroStartupReady:false,document:{hidden:false,querySelector:()=>null},window:{DreamMobilePlayback:mobile}};
+ const start=source.indexOf('function syncHeroVideo(){'),end=source.indexOf("heroVideo?.addEventListener('loadeddata'",start);vm.runInNewContext(source.slice(start,end)+';globalThis.sync=syncHeroVideo;',env);return {env,calls,video,mobile};
+}
+test('a decoded first frame can start mobile playback even when canplay has not fired',()=>{
+ const h=playbackHarness();h.env.sync();assert.equal(h.calls.play,1,'HAVE_CURRENT_DATA must start playback rather than wait forever on canplay');assert.equal(h.video.muted,true);assert.equal(h.video.defaultMuted,true);assert.equal(h.video.playsInline,true);
+});
+test('offscreen hero playback remains deliberately paused rather than automatically recovered',()=>{
+ const h=playbackHarness();h.mobile.visibility=()=>({ratio:0});h.env.sync();assert.equal(h.calls.play,0);assert.equal(h.video.dataset.viewportPaused,'true');assert.equal(h.video.autoplay,false);
+});

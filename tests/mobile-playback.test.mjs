@@ -4,11 +4,11 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../dist/mobile-playback.js',import.meta.url),'utf8');
 function fixture(){
- const handlers=new Map(),queries=[],state={cards:[],dialog:null},doc={hidden:false,querySelector:()=>state.dialog,querySelectorAll:s=>s==='#showcase-grid .work-card'?state.cards:[],addEventListener:(name,fn)=>handlers.set(name,fn),dispatchEvent(){}};
- const env={document:doc,innerWidth:390,innerHeight:844,matchMedia:q=>{const m={matches:!q.includes('reduced-motion'),addEventListener(){}};queries.push(m);return m;},addEventListener(){},setTimeout:()=>1,clearTimeout(){},IntersectionObserver:class{observe(){}},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init?.detail;}}};vm.runInNewContext(source,env);
+ const timers=new Map();let timerId=0;const handlers=new Map(),queries=[],state={cards:[],dialog:null},doc={hidden:false,querySelector:()=>state.dialog,querySelectorAll:s=>s==='#showcase-grid .work-card'?state.cards:[],addEventListener:(name,fn)=>handlers.set(name,fn),dispatchEvent(){}};
+ const env={document:doc,innerWidth:390,innerHeight:844,matchMedia:q=>{const m={matches:!q.includes('reduced-motion'),addEventListener(){}};queries.push(m);return m;},addEventListener(){},setTimeout:(fn,delay)=>{timers.set(++timerId,{fn,delay});return timerId;},clearTimeout:id=>timers.delete(id),IntersectionObserver:class{observe(){}},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init?.detail;}}};vm.runInNewContext(source,env);
  const rect=(top,height=180)=>({left:0,right:320,top,bottom:top+height,width:320,height});
  const media=(top=300)=>({isConnected:true,dataset:{},paused:true,calls:0,pauses:0,events:[],getBoundingClientRect:()=>rect(top),closest:()=>null,pause(){this.pauses++;this.paused=true;},play(){this.calls++;this.paused=false;return Promise.resolve();},dispatchEvent(e){this.events.push(e);}});
- return {api:env.DreamMobilePlayback,doc,handlers,queries,state,rect,media};
+ return {api:env.DreamMobilePlayback,doc,handlers,queries,state,rect,media,timers,runTimer(delay){const entry=[...timers].find(([,t])=>t.delay===delay);assert.ok(entry,'scheduled recovery exists');timers.delete(entry[0]);entry[1].fn();}};
 }
 test('mobile autoplay policy refusal keeps a poster, without propagating a Play video prompt',async()=>{
  const f=fixture(),v=f.media();let stopped=false;
@@ -43,4 +43,24 @@ test('workflow autoplay follows the visible step and pauses the sequence when it
 
 test('a genuine media error is not silently retried by the autoplay queue',async()=>{
  const f=fixture(),v=f.media();f.api.block(v);v.dataset.feedbackState='error';f.handlers.get('pointerup')();await new Promise(resolve=>setImmediate(resolve));assert.equal(v.calls,0);
+});
+
+test('a temporary autoplay denial retries automatically without waiting for a touch',async()=>{
+ const f=fixture(),v=f.media();let calls=0;v.play=()=>{v.calls++;return ++calls===1?Promise.reject({name:'NotAllowedError'}):Promise.resolve();};
+ await f.api.attempt(v);assert.equal(v.dataset.autoplayBlocked,'true');f.runTimer(250);await new Promise(resolve=>setImmediate(resolve));assert.equal(v.calls,2);assert.equal(v.dataset.autoplayBlocked,undefined);
+});
+test('autoplay denial recovery is bounded and does not spin forever',async()=>{
+ const f=fixture(),v=f.media();v.play=()=>{v.calls++;return Promise.reject({name:'NotAllowedError'});};await f.api.attempt(v);
+ for(const delay of [250,750,1500]){f.runTimer(delay);await new Promise(resolve=>setImmediate(resolve));}
+ assert.equal(v.calls,4);assert.equal([...f.timers.values()].filter(t=>[250,750,1500].includes(t.delay)).length,0);
+});
+test('offscreen intentional pauses cannot be undone by a delayed recovery',async()=>{
+ const f=fixture(),v=f.media();f.api.block(v);v.dataset.viewportPaused='true';f.runTimer(250);await new Promise(resolve=>setImmediate(resolve));assert.equal(v.calls,0);
+});
+test('multiple readiness events cannot issue duplicate pending play requests',async()=>{
+ const f=fixture(),v=f.media();let finish;v.play=()=>{v.calls++;return new Promise(resolve=>{finish=resolve;});};const first=f.api.attempt(v);f.api.attempt(v);f.api.attempt(v);assert.equal(v.calls,1);finish();await first;
+});
+
+test('a progressing ready video is not restarted by repeated viewport notifications',async()=>{
+ const f=fixture(),v=f.media();v.paused=false;v.readyState=4;await f.api.attempt(v);assert.equal(v.calls,0);
 });

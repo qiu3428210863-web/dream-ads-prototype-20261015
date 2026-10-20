@@ -6,8 +6,10 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "High",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
           "bit_rate": "9156439"
         }
@@ -22,15 +24,17 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "Main",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
-          "bit_rate": "2584025"
+          "bit_rate": "2313339"
         }
       ],
       "format": {
         "duration": "24.041667",
-        "size": "7772878"
+        "size": "6959389"
       }
     }
   },
@@ -41,8 +45,10 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "High",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
           "bit_rate": "10613587"
         }
@@ -57,15 +63,17 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "Main",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
-          "bit_rate": "3065268"
+          "bit_rate": "2701086"
         }
       ],
       "format": {
         "duration": "24.041667",
-        "size": "9219141"
+        "size": "8124664"
       }
     }
   },
@@ -76,8 +84,10 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "High",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
           "bit_rate": "15230546"
         }
@@ -92,15 +102,17 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "Main",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
-          "bit_rate": "4869190"
+          "bit_rate": "2938986"
         }
       ],
       "format": {
         "duration": "20.041667",
-        "size": "12204951"
+        "size": "7369318"
       }
     }
   },
@@ -111,8 +123,10 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "High",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
           "bit_rate": "11020356"
         }
@@ -127,15 +141,17 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "Main",
           "width": 1280,
           "height": 720,
+          "level": 31,
           "r_frame_rate": "24/1",
-          "bit_rate": "2810203"
+          "bit_rate": "2348602"
         }
       ],
       "format": {
         "duration": "30.041667",
-        "size": "10561773"
+        "size": "8828327"
       }
     }
   },
@@ -146,8 +162,10 @@
       "stream_groups": [],
       "streams": [
         {
+          "profile": "High",
           "width": 1920,
           "height": 1080,
+          "level": 40,
           "r_frame_rate": "30/1",
           "bit_rate": "9800483"
         }
@@ -162,15 +180,17 @@
       "stream_groups": [],
       "streams": [
         {
-          "width": 1920,
-          "height": 1080,
+          "profile": "Main",
+          "width": 1280,
+          "height": 720,
+          "level": 31,
           "r_frame_rate": "30/1",
-          "bit_rate": "6286524"
+          "bit_rate": "3064236"
         }
       ],
       "format": {
         "duration": "15.000000",
-        "size": "11792890"
+        "size": "5751261"
       }
     }
   }

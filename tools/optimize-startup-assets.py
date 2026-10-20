@@ -23,7 +23,7 @@ def stream(entry):
  index,(name,_)=entry;target=assets/'hero-streams'/f'{name}.mp4'
  src=root/'.tools'/'hero-source'/f'{name}.mp4'
  if (not target.exists() or '--refresh-video' in sys.argv) and not src.exists():raise RuntimeError('Run python tools/encode-hero-hd.py to fetch original HD sources first')
- if not target.exists() or '--refresh-video' in sys.argv:run(['-i',str(src),'-vf',"scale='min(1920,iw)':-2",'-an','-c:v','libx264','-preset','medium','-crf','20','-maxrate','6000k','-bufsize','12000k','-pix_fmt','yuv420p','-g','48','-keyint_min','48','-sc_threshold','0','-threads','2','-movflags','+faststart',str(target)])
+ if not target.exists() or '--refresh-video' in sys.argv:run(['-i',str(src),'-vf',"scale='min(1280,iw)':-2",'-an','-c:v','libx264','-preset','medium','-crf','21','-profile:v','main','-level:v','3.1','-maxrate','3000k','-bufsize','6000k','-pix_fmt','yuv420p','-g','48','-keyint_min','48','-sc_threshold','0','-threads','2','-movflags','+faststart',str(target)])
  return {'id':name,'input_bytes':src.stat().st_size if src.exists() else None,'stream_bytes':target.stat().st_size}
 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:streams=list(pool.map(stream,enumerate(items[:5])))
 studio=[]

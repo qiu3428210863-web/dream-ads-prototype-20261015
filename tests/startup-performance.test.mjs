@@ -19,18 +19,19 @@ test('noncritical art and workflow videos do not compete with the hero',()=>{
 });
 test('hero clips and card posters are served from this site rather than blocking on external CDN',()=>{
  assert.match(app,/concept\.thumbnailUrl=`assets\/posters\/\$\{concept\.id\}\.webp`/);
- assert.match(app,/new URL\(`assets\/hero-streams\/\$\{concept\.id\}\.mp4\?v=20261020-hd`,document\.baseURI\)\.href/);
+ assert.match(app,/new URL\(`assets\/hero-streams\/\$\{concept\.id\}\.mp4\?v=20261020-720p`,document\.baseURI\)\.href/);
  for(const id of ['openart-activewear','openart-orange-soda','openart-energy-drink','openart-pink-fashion','openart-fox-film']){
   const bytes=readFileSync(new URL('../dist/assets/hero-streams/'+id+'.mp4',import.meta.url));
-  assert.ok(bytes.length<25000000,'HD hero remains moderately compressed');
+  assert.ok(bytes.length<15000000,'720p hero remains moderately compressed');
   let avc=bytes.indexOf(Buffer.from('avc1'));
   while(avc>=0&&(bytes.readUInt32BE(avc-4)<86||bytes.readUInt32BE(avc-4)>bytes.length))avc=bytes.indexOf(Buffer.from('avc1'),avc+4);
   assert.ok(avc>=0,'H.264 sample entry exists');
-  assert.ok(bytes.readUInt16BE(avc+28)>=1280&&bytes.readUInt16BE(avc+30)>=720,'full-screen clips retain original HD dimensions');assert.ok(bytes.indexOf(Buffer.from('moov'))<bytes.indexOf(Buffer.from('mdat')),'MP4 metadata precedes video frames for progressive startup');
+  const config=bytes.indexOf(Buffer.from('avcC'));assert.ok(config>=0);assert.equal(bytes[config+5],77,'Main profile for mobile decoders');assert.equal(bytes[config+7],31,'level 3.1 for 720p mobile playback');
+  assert.ok(bytes.readUInt16BE(avc+28)===1280&&bytes.readUInt16BE(avc+30)===720,'every full-screen clip is native or downsampled 720p');assert.ok(bytes.indexOf(Buffer.from('moov'))<bytes.indexOf(Buffer.from('mdat')),'MP4 metadata precedes video frames for progressive startup');
  }
 });
 
 test('hero encoding uses original sources with moderate quality rather than recompressing card previews',()=>{
  const encoder=readFileSync(new URL('../tools/encode-hero-hd.py',import.meta.url),'utf8');
- assert.doesNotMatch(encoder,/card-previews/);assert.match(encoder,/'-crf', '20'/);assert.match(encoder,/'-maxrate', '6000k'/);assert.match(encoder,/hero-source/);
+ assert.doesNotMatch(encoder,/card-previews/);assert.match(encoder,/'-crf', '21'/);assert.match(encoder,/'-maxrate', '3000k'/);assert.match(encoder,/hero-source/);assert.match(encoder,/'-profile:v', 'main', '-level:v', '3.1'/);
 });
