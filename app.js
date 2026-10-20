@@ -82,7 +82,7 @@ if(heroCardGrid){
  heroCardGrid.innerHTML=concepts.slice(0,5).map((c,index)=>conceptCardMarkup(c,index,5,true)).join('');
  window.DreamCarouselInput?.bind(heroCardGrid);
  const nativeFeatured=matchMedia('(max-width:900px), (hover:none), (pointer:coarse)');
- const rail=heroCardGrid.parentElement,featuredCards=$$('.work-card',heroCardGrid),heroConcepts=concepts.slice(0,5),heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4`,document.baseURI).href);
+ const rail=heroCardGrid.parentElement,featuredCards=$$('.work-card',heroCardGrid),heroConcepts=concepts.slice(0,5),heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4?v=20261020-hd`,document.baseURI).href);
  rail.classList.add('is-visible');
  startHeroCopyEntrance();startHeroCardEntrance(featuredCards,rail);
  let heroVideoIndex=0,gesture=null,suppressUntil=0,progressFrame=0,videoFrameToken=0,lastFallbackProgress=0;
