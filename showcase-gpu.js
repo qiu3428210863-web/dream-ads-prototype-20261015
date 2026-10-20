@@ -106,7 +106,7 @@
  function productBackground(){return getComputedStyle(root).getPropertyValue('--ui-surface').trim()||'#151515';}
  function discIsActive(parts){
   const {card,owner,open}=parts;
-  if(card.classList.contains('suppress-hover-effects')||owner.classList.contains('is-interacting')||document.querySelector('dialog[open]'))return false;
+  if(owner.classList.contains('hero-card-grid')||card.classList.contains('suppress-hover-effects')||owner.classList.contains('is-interacting')||document.querySelector('dialog[open]'))return false;
   return hoverInput.matches&&card.matches(':hover')||!owner.classList.contains('hero-card-grid')&&Boolean(open?.matches(':focus-visible'));
  }
  function paintDisc(parts){
@@ -154,10 +154,11 @@
   if(sub&&getComputedStyle(sub).display!=='none'){const r=layoutRect(sub.getBoundingClientRect()),s=getComputedStyle(sub);ctx.font=`${s.fontWeight} ${parseFloat(s.fontSize)||14}px ${s.fontFamily}`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle=s.color;ctx.fillText(sub.innerText,r.left,r.top);}
   const loader=card.querySelector('.media-loader');if(loader&&!loader.hidden)window.DreamMediaLoader?.draw(ctx,v,performance.now(),reducedMotion.matches);
   paintFeedback(card);
-  const progress=Math.max(0,Math.min(1,Number(card.dataset.playbackProgress)||0));
-  if(progress>0){const stroke=2.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;ctx.lineCap='round';if(progress<.999)ctx.setLineDash([o.perimeter*progress,o.perimeter*(1-progress)]);roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
-  else if(card.matches(':hover')||parts.open?.matches(':focus-visible')){const stroke=parseFloat(visualStyle.getPropertyValue('--work-outline-stroke'))||1.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
   ctx.restore();
+  // Detached outlines must be outside the image/card clip.
+  const progress=Math.max(0,Math.min(1,Number(card.dataset.playbackProgress)||0));
+  if(progress>0){const stroke=2.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;ctx.lineCap='round';if(progress<.999){ctx.setLineDash([o.perimeter*progress,o.perimeter*(1-progress)]);ctx.lineDashOffset=-Math.max(0,o.width/2-o.radius);}roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
+  else if(card.matches(':hover')||parts.open?.matches(':focus-visible')){const stroke=parseFloat(visualStyle.getPropertyValue('--work-outline-stroke'))||1.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
  }
  function prepareFrame(item,rect){
   const layoutWidth=item.card.offsetWidth||rect.width,layoutHeight=item.card.offsetHeight||rect.height;
@@ -166,8 +167,8 @@
   frame={screen:rect,baseLeft,baseTop,scaleX,scaleY};
   const layoutCard={left:baseLeft,top:baseTop,width:layoutWidth,height:layoutHeight,right:baseLeft+layoutWidth,bottom:baseTop+layoutHeight};
   // Reserve disc space once; hover must not resize and recreate the GPU texture.
-  const bleed=Math.ceil(layoutWidth*.18)+12,textureTop=baseTop-bleed;
-  return {layoutCard,textureBounds:{left:baseLeft,top:textureTop,width:layoutWidth,height:layoutHeight+bleed},displayBounds:{left:rect.left,top:rect.top-bleed*scaleY,width:rect.width,height:rect.height+bleed*scaleY}};
+  const bleed=Math.ceil(layoutWidth*.18)+12,pad=8,textureTop=baseTop-bleed;
+  return {layoutCard,textureBounds:{left:baseLeft-pad,top:textureTop,width:layoutWidth+pad*2,height:layoutHeight+bleed+pad},displayBounds:{left:rect.left-pad*scaleX,top:rect.top-bleed*scaleY,width:rect.width+pad*2*scaleX,height:rect.height+(bleed+pad)*scaleY}};
  }
  function updateTexture(item,rect,bounds,layoutCard){
   if(!ensureCanvas(item,layoutCard,bounds))return false;

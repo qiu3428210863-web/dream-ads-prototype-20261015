@@ -65,7 +65,7 @@ body .hero-copy.page-perspective-surface{--page-rest-transform:translateY(0)}
 .hero-card-grid.showcase-grid .work-card:not([data-carousel-distance="0"]):hover{--hover-lift:-9px}
 .hero-card-grid.showcase-grid .work-card[data-carousel-distance="0"]:hover{--hover-lift:0px}
 .hero-card-grid .work-open{background:transparent}
-.hero-card-grid .work-card:focus-within .work-disc{opacity:0!important;transform:translate(-50%,18%) rotate(-12deg)!important}
+.hero-card-grid .work-disc{display:none!important}
 .hero-card-grid .cover-wordmark,.hero-card-grid .work-caption,.hero-card-grid .work-meta{display:none!important}
 .hero-card-grid .work-open[aria-disabled="true"]{cursor:default}
 .hero-card-grid .work-hover-video{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none}
