@@ -21,9 +21,10 @@ def poster(entry):
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:posters=list(pool.map(poster,enumerate(items)))
 def stream(entry):
  index,(name,_)=entry;target=assets/'hero-streams'/f'{name}.mp4'
- src=assets/'hero-background.mp4' if index==0 else assets/'card-previews'/f'{name}.mp4'
- if not target.exists() or '--refresh-video' in sys.argv:run(['-i',str(src),'-vf',"scale='min(960,iw)':-2",'-an','-c:v','libx264','-preset','medium','-crf','31','-maxrate','900k','-bufsize','1800k','-pix_fmt','yuv420p','-r','24','-g','48','-keyint_min','48','-sc_threshold','0','-threads','2','-movflags','+faststart',str(target)])
- return {'id':name,'input_bytes':src.stat().st_size,'stream_bytes':target.stat().st_size}
+ src=root/'.tools'/'hero-source'/f'{name}.mp4'
+ if (not target.exists() or '--refresh-video' in sys.argv) and not src.exists():raise RuntimeError('Run python tools/encode-hero-hd.py to fetch original HD sources first')
+ if not target.exists() or '--refresh-video' in sys.argv:run(['-i',str(src),'-vf',"scale='min(1920,iw)':-2",'-an','-c:v','libx264','-preset','medium','-crf','20','-maxrate','6000k','-bufsize','12000k','-pix_fmt','yuv420p','-g','48','-keyint_min','48','-sc_threshold','0','-threads','2','-movflags','+faststart',str(target)])
+ return {'id':name,'input_bytes':src.stat().st_size if src.exists() else None,'stream_bytes':target.stat().st_size}
 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:streams=list(pool.map(stream,enumerate(items[:5])))
 studio=[]
 for name in ['creative-studio-scene','creative-studio-foreground']:

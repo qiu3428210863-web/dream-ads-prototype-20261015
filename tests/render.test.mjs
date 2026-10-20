@@ -115,7 +115,7 @@ test('showcase updates only visible dirty textures and shares bounded animation 
 test('hero repeats the actual showcase sleeves instead of the miniature Up next carousel',()=>{
  assert.match(html,/class="hero-card-rail"[\s\S]*class="showcase-grid hero-card-grid" id="hero-showcase-grid"/);
  assert.match(appSource,/heroCardGrid\.innerHTML=concepts\.slice\(0,5\)\.map\(\(c,index\)=>conceptCardMarkup\(c,index,5,true\)\)/,'the hero has its own five-card row');
- assert.ok(appSource.includes('heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4`,document.baseURI).href)'),'the hero follows the five locally optimized clips');
+ assert.ok(appSource.includes('heroPlaylist=heroConcepts.map(concept=>new URL(`assets/hero-streams/${concept.id}.mp4?v=20261020-hd`,document.baseURI).href)'),'the hero follows the five locally optimized clips');
  assert.match(html,/<img class="hero-video-poster is-visible"[^>]*src="assets\/posters\/openart-activewear\.webp"/,'the first image is visible without waiting for JavaScript');
  assert.doesNotMatch(html,/hero-background\.mp4/,'the unused background video does not compete with the first featured clip');
  assert.match(appSource,/heroVideoPoster=\$\('\.hero-video-poster'\)/,'the selected card poster is available during video transitions');

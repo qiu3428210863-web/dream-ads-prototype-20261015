@@ -35,3 +35,7 @@ This verifies request order and fallback behavior; it is not a claimed cold-cach
 ## Rebuild and publish
 
 `python tools/optimize-startup-assets.py` creates missing derived assets with FFmpeg (using already-present sources or original poster URLs). `--refresh-video` regenerates hero streams. Commit intended changes, then run `./tools/publish-pages.ps1`; it reruns checks, pushes source and Pages, waits for the exact build and verifies public HTML.
+
+## Subsequent hero quality update
+
+The size table above records the earlier low-bandwidth optimization. Full-screen clips have since been replaced with original-source HD encodes; see [hero-quality.md](hero-quality.md) and hero-hd-media.json for the current dimensions, frame rates and sizes. The local poster, fast-start MP4 and deferred download strategy remain in place.

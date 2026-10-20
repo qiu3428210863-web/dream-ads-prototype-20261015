@@ -1,0 +1,177 @@
+[
+  {
+    "id": "openart-activewear",
+    "original": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "9156439"
+        }
+      ],
+      "format": {
+        "duration": "24.064000",
+        "size": "27948019"
+      }
+    },
+    "delivered": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "2584025"
+        }
+      ],
+      "format": {
+        "duration": "24.041667",
+        "size": "7772878"
+      }
+    }
+  },
+  {
+    "id": "openart-orange-soda",
+    "original": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "10613587"
+        }
+      ],
+      "format": {
+        "duration": "24.064000",
+        "size": "32327050"
+      }
+    },
+    "delivered": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "3065268"
+        }
+      ],
+      "format": {
+        "duration": "24.041667",
+        "size": "9219141"
+      }
+    }
+  },
+  {
+    "id": "openart-energy-drink",
+    "original": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "15230546"
+        }
+      ],
+      "format": {
+        "duration": "20.064000",
+        "size": "38518979"
+      }
+    },
+    "delivered": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "4869190"
+        }
+      ],
+      "format": {
+        "duration": "20.041667",
+        "size": "12204951"
+      }
+    }
+  },
+  {
+    "id": "openart-pink-fashion",
+    "original": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "11020356"
+        }
+      ],
+      "format": {
+        "duration": "30.080000",
+        "size": "41916488"
+      }
+    },
+    "delivered": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "bit_rate": "2810203"
+        }
+      ],
+      "format": {
+        "duration": "30.041667",
+        "size": "10561773"
+      }
+    }
+  },
+  {
+    "id": "openart-fox-film",
+    "original": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "bit_rate": "9800483"
+        }
+      ],
+      "format": {
+        "duration": "15.022993",
+        "size": "18759683"
+      }
+    },
+    "delivered": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "bit_rate": "6286524"
+        }
+      ],
+      "format": {
+        "duration": "15.000000",
+        "size": "11792890"
+      }
+    }
+  }
+]
