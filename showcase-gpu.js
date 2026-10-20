@@ -131,9 +131,13 @@
   if(button&&!button.hidden){const b=layoutRect(button.getBoundingClientRect()),s=getComputedStyle(button);roundRect(ctx,b.left,b.top,b.width,b.height,parseFloat(s.borderRadius)||20);ctx.fillStyle=s.backgroundColor;ctx.fill();ctx.fillStyle=s.color;ctx.font=`${s.fontWeight} ${parseFloat(s.fontSize)||13}px ${s.fontFamily}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(button.textContent,b.left+b.width/2,b.top+b.height/2);}
   ctx.restore();
  }
+ function outlineGeometry(rect,radius,gap,stroke){
+  const width=rect.width+gap*2-stroke,height=rect.height+gap*2-stroke,r=Math.min(radius+gap-stroke/2,width/2,height/2);
+  return {left:rect.left-gap+stroke/2,top:rect.top-gap+stroke/2,width,height,radius:r,perimeter:2*(width+height-4*r)+2*Math.PI*r};
+ }
  function paintCard(parts,cardRect){
   const {card,owner,visual,cover,product,logo,caption,meta,title,sub}=parts;if(!visual||!cover||!meta)return;const hero=owner.classList.contains('hero-card-grid');
-  const v=layoutRect(visual.getBoundingClientRect()),m=layoutRect(meta.getBoundingClientRect()),radius=parseFloat(getComputedStyle(card).borderRadius)||18,visualRadius=parseFloat(getComputedStyle(visual).borderRadius)||18;
+  const visualStyle=getComputedStyle(visual),v=layoutRect(visual.getBoundingClientRect()),m=layoutRect(meta.getBoundingClientRect()),radius=parseFloat(getComputedStyle(card).borderRadius)||18,visualRadius=parseFloat(visualStyle.borderRadius)||18,outlineGap=parseFloat(visualStyle.getPropertyValue('--work-outline-gap'))||6;
   ctx.save();roundRect(ctx,cardRect.left,cardRect.top,cardRect.width,cardRect.height,radius);if(!hero){ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--ui-surface').trim()||'#151515';ctx.fill();}ctx.clip();
   roundRect(ctx,v.left,v.top,v.width,v.height,visualRadius);ctx.fillStyle=productBackground(v);ctx.fill();ctx.save();roundRect(ctx,v.left,v.top,v.width,v.height,visualRadius);ctx.clip();
   const hoverVideo=parts.hoverVideo;
@@ -151,8 +155,8 @@
   const loader=card.querySelector('.media-loader');if(loader&&!loader.hidden)window.DreamMediaLoader?.draw(ctx,v,performance.now(),reducedMotion.matches);
   paintFeedback(card);
   const progress=Math.max(0,Math.min(1,Number(card.dataset.playbackProgress)||0));
-  if(progress>0){const gap=6,stroke=2.25,x=v.left-gap+stroke/2,y=v.top-gap+stroke/2,w=v.width+gap*2-stroke,h=v.height+gap*2-stroke,r=24,perimeter=2*(w+h-4*r)+2*Math.PI*r;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;ctx.lineCap='round';if(progress<.999)ctx.setLineDash([perimeter*progress,perimeter*(1-progress)]);roundRect(ctx,x,y,w,h,r);ctx.stroke();ctx.restore();}
-  else if(card.matches(':hover')||parts.open?.matches(':focus-visible')){const gap=6,stroke=1.25;ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;roundRect(ctx,v.left-gap+stroke/2,v.top-gap+stroke/2,v.width+gap*2-stroke,v.height+gap*2-stroke,24);ctx.stroke();ctx.restore();}
+  if(progress>0){const stroke=2.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;ctx.lineCap='round';if(progress<.999)ctx.setLineDash([o.perimeter*progress,o.perimeter*(1-progress)]);roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
+  else if(card.matches(':hover')||parts.open?.matches(':focus-visible')){const stroke=parseFloat(visualStyle.getPropertyValue('--work-outline-stroke'))||1.25,o=outlineGeometry(v,visualRadius,outlineGap,stroke);ctx.save();ctx.strokeStyle='#e89bd3';ctx.lineWidth=stroke;roundRect(ctx,o.left,o.top,o.width,o.height,o.radius);ctx.stroke();ctx.restore();}
   ctx.restore();
  }
  function prepareFrame(item,rect){

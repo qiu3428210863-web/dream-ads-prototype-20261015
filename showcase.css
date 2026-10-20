@@ -19,19 +19,20 @@
 .work-open{position:relative;z-index:1;display:block;width:100%;padding:0;border:0;background:#090909;text-align:left;color:#fff;border-radius:16px;cursor:pointer}
 .showcase-grid .work-visual{
   position:relative;width:100%;height:auto;aspect-ratio:16/9;min-height:0;
-  border-radius:18px;background:#090909;overflow:visible;isolation:isolate;
+  --work-radius:18px;--work-outline-gap:6px;--work-outline-stroke:1.25px;
+  border-radius:var(--work-radius);background:#090909;overflow:visible;isolation:isolate;
 }
 .showcase-grid .work-visual::before{display:none}
 .showcase-grid .work-visual{transform:scale(1);transform-origin:center;transition:transform .32s ease-in-out}
 .work-visual::after{
-  content:"";position:absolute;inset:-6px;border-radius:24px;padding:1.25px;
+  content:"";position:absolute;inset:calc(-1 * var(--work-outline-gap));border-radius:calc(var(--work-radius) + var(--work-outline-gap));padding:var(--work-outline-stroke);
   background:linear-gradient(130deg,#f7c4e8 4%,#e69ad2 30%,#dc48ba 70%,#f7c4e8);
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 .work-cover{
-  position:absolute;inset:0;border-radius:18px;overflow:hidden;
+  position:absolute;inset:0;border-radius:inherit;overflow:hidden;
   background:radial-gradient(ellipse at 65% 60%,#79526c,#20131d 70%);
   transform:scale(1);transition:transform .32s ease-in-out;
 }
@@ -89,8 +90,7 @@
 @media(max-width:600px){
  .showcase-grid{gap:15px;padding:56px 3px 10px}
  .showcase-grid .work-card{flex-basis:82%;padding:10px;border-radius:18px}
- .showcase-grid .work-visual,.work-cover{border-radius:14px}
- .work-visual::after{border-radius:20px;padding:1.25px;inset:-6px}
+ .showcase-grid .work-visual{--work-radius:14px}
  .showcase-grid .work-caption{font-size:clamp(31px,9.7vw,55px)}
  .showcase-grid .cover-wordmark{width:65px}
  .showcase-grid .work-meta{padding:19px 2px 8px;min-height:98px}
