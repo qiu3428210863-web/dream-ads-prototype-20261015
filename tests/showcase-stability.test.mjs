@@ -49,12 +49,14 @@ test('restored pointer focus cannot keep a disc out; suppression and open dialog
  hover=true;assert.equal(sandbox.active(parts),true);suppressed=true;assert.equal(sandbox.active(parts),false);suppressed=false;dialog=true;assert.equal(sandbox.active(parts),false);
  dialog=false;hover=false;focusVisible=true;assert.equal(sandbox.active(parts),true,'keyboard navigation still exposes the disc');hero=true;assert.equal(sandbox.active(parts),false);hover=true;assert.equal(sandbox.active(parts),false,'hero cards never show CDs, even on hover');hover=false;hero=false;interacting=true;assert.equal(sandbox.active(parts),false);interacting=false;focusVisible=false;hover=true;sandbox.hoverInput.matches=false;assert.equal(sandbox.active(parts),false,'touch hover never sticks');
 });
-test('only the explicitly marked uploaded example gets a gallery badge',()=>{
+test('each explicitly marked example gets a gallery badge and leads the hero row',()=>{
  const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8'),start=app.indexOf('function conceptCardMarkup('),end=app.indexOf('function startHeroCopyEntrance(',start),sandbox={};
  vm.runInNewContext(app.slice(start,end)+';globalThis.card=conceptCardMarkup;',sandbox);
  const concept={id:'demo',title:'Demo',product:'Demo',headline:'Demo',thumbnailUrl:'poster.webp',videoSrc:'demo.mp4'};
  assert.doesNotMatch(sandbox.card(concept,0,2),/work-example-badge/);assert.match(sandbox.card({...concept,example:true},0,2),/work-example-badge/);assert.doesNotMatch(sandbox.card({...concept,example:true},0,2,true),/work-example-badge/);assert.doesNotMatch(sandbox.card(concept,0,2,true),/work-disc/);assert.match(sandbox.card(concept,0,2),/work-disc/);
- assert.equal((app.match(/example:true/g)||[]).length,1);
+ assert.equal((app.match(/example:true/g)||[]).length,2);
+ assert.match(app,/const heroConcepts=\[\.\.\.concepts\.filter\(concept=>concept\.example\),\.\.\.concepts\.filter\(concept=>!concept\.example\)\]\.slice\(0,5\)/);
+ assert.match(app,/id:'fashion-elevator-example'[\s\S]*?example:true[\s\S]*?id:'sofa-living-room-example'[\s\S]*?example:true/);
 });
 
 test('minor pointer movement inside a returned card cannot undo disc suppression',()=>{
