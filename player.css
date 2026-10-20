@@ -86,8 +86,7 @@ html.showcase-gpu-active .work-card.is-previewing .work-visual::before{display:n
 .preview-stage.has-load-error:after{display:none}
 /* Grow the supplied Möbius silhouette, then clear its tail along the same path. */
 .media-loader{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;pointer-events:none;background:#0d0b14a8;container-type:size}
-.media-loader svg{width:68px;height:41px;overflow:visible;fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
-.media-loader-track{stroke:#ffffff26}
+.media-loader svg{width:68px;height:41px;overflow:visible;fill:none;stroke-width:7.5;stroke-linecap:round;stroke-linejoin:round}
 .media-loader-ring{stroke:#fff;stroke-dasharray:0 400;animation:media-mobius-grow 2.4s cubic-bezier(.33,0,.67,1) infinite}
 .media-loading-label{color:#f5f3fa;font:500 14px/20px var(--ui-font,Arial,sans-serif);letter-spacing:.01em;white-space:nowrap}
 .media-loading-dots{display:inline-flex;margin-left:2px}
